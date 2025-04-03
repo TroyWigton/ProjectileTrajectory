@@ -1,2 +1,1 @@
-# ProjectileTrajectory
-Evaluating the optimal launch angle to achieve maximum horizontal distance traveled.
+clang++ -std=c++14 -o3 -o main main.cpp
