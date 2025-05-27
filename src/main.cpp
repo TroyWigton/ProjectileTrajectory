@@ -128,6 +128,7 @@ auto max_drag = *std::max_element(results.begin(), results.end(),
 
     // Output comparison
 std::cout << std::fixed << std::setprecision(4);  // Applies to ALL subsequent floats
+std::cout << "With k_over_m = " << k_over_m << std::endl;
 std::cout << "Maximum distance without drag: " 
           << std::defaultfloat << max_no_drag.distance  // Reset for distance
           << " m at " 
