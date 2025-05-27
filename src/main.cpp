@@ -104,7 +104,7 @@ int main() {
     std::vector<ScenarioResult> results;
     
     // Parameter sweep
-    for (double angle = 43.5; angle <= 45.1; angle += .001) {
+    for (double angle = 35.0; angle <= 45.1; angle += .001) {
         // Simulate both scenarios
         results.push_back(simulate_trajectory(angle, v0, h0, false, deltaT, g));
         results.push_back(simulate_trajectory(angle, v0, h0, true, deltaT, g, k_over_m));
