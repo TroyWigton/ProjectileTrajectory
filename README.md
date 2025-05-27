@@ -25,6 +25,14 @@ cmake --build .
 
 Run the executable `./main`
 
+### Sample Result
+
+```
+With k_over_m = 0.0025
+Maximum distance without drag: 254.8 m at 45.0000 degrees
+Maximum distance with drag: 175.3 m at 42.1080 degrees
+```
+
 ## Help
 
 Should cmake not be available on the build machine. Compiling by command line on a mac is performed as follows.
