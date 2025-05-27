@@ -39,8 +39,8 @@ State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
 void no_drag_deriv(const State& s, double t, State& deriv, double g) {
     deriv[0] = s[2];  // dx/dt = vx
     deriv[1] = s[3];  // dy/dt = vy
-    deriv[2] = 0.0;  // dvx/dt = 0
-    deriv[3] = -g;    // dvy/dt = -g
+    deriv[2] = 0.0;  // dvx/dt = 0 (x-acceleration)
+    deriv[3] = -g;    // dvy/dt = -g (y-acceleration)
 }
 
 void drag_deriv(const State& s, double t, State& deriv, double g, double k_over_m) {
@@ -96,7 +96,9 @@ ScenarioResult simulate_trajectory(double angle_deg, double v0, double h0,
 
 int main() {
     const double g = 9.81;   // m/s²
-    const double k_over_m = 0.01;  // Drag coefficient/mass
+    const double k_over_m = 0.0025;  // density * Cd * A / (2m) 
+    // Vacuum 0.0, GolfBall .0025, PingPongBall .01
+
     const double deltaT = .001;
     const double v0 = 50;
     const double h0 = 0.0;
@@ -104,7 +106,7 @@ int main() {
     std::vector<ScenarioResult> results;
     
     // Parameter sweep
-    for (double angle = 35.0; angle <= 45.1; angle += .001) {
+    for (double angle = 40.0; angle <= 45.1; angle += .001) {
         // Simulate both scenarios
         results.push_back(simulate_trajectory(angle, v0, h0, false, deltaT, g));
         results.push_back(simulate_trajectory(angle, v0, h0, true, deltaT, g, k_over_m));
