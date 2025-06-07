@@ -5,7 +5,7 @@
 #include "math.h"
 
 //#define DEBUG
-
+//#define M_PI 3.14159265359;
 // 4D state: [x_pos, y_pos, x_vel, y_vel]
 using State = std::array<double, 4>;
 
@@ -68,6 +68,7 @@ struct ScenarioResult {
 
 ScenarioResult simulate_trajectory(double angle_deg, double v0, double h0, 
                                   bool use_drag, double dt, double g, double k_over_m = 0) {
+    const double M_PI = 3.14159265359;                                
     const double angle_rad = angle_deg * M_PI / 180.0;
     State state = {0.0, h0, v0*cos(angle_rad), v0*sin(angle_rad)};
     double t = 0.0;
