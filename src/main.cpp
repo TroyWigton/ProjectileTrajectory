@@ -36,13 +36,6 @@ State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
     return next_state;
 }
 
-void no_drag_deriv(const State& s, double t, State& deriv, double g) {
-    deriv[0] = s[2];  // dx/dt = vx
-    deriv[1] = s[3];  // dy/dt = vy
-    deriv[2] = 0.0;  // dvx/dt = 0 (x-acceleration)
-    deriv[3] = -g;    // dvy/dt = -g (y-acceleration)
-}
-
 void drag_deriv(const State& s, double t, State& deriv, double g, double k_over_m) {
     const double v = sqrt(s[2]*s[2] + s[3]*s[3]);
     deriv[0] = s[2];  // dx/dt = vx
