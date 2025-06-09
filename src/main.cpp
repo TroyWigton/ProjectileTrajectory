@@ -77,9 +77,8 @@ State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
 }
 
 // 8th Order Runge-Kutta
-template<typename State>
-State rk8_step(const State& state, double t, double dt,
-              std::function<void(const State&, double, State&)> deriv_func) {
+template<typename State, typename DerivativeFunction>
+State rk8_step(const State& state, double t, double dt, DerivativeFunction deriv_func) {
     // Dormand-Prince 8(7) Butcher tableau coefficients
     constexpr double a[13][13] = {
         {0},
