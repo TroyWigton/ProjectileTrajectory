@@ -5,8 +5,9 @@
 #include "math.h"
 
 //#define DEBUG
+
 // 4D state: [x_pos, y_pos, x_vel, y_vel]
-using State = std::array<double, 4>;
+typedef std::array<double,4> State;
 
 template<typename DerivativeFunc>
 State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
