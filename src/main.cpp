@@ -106,7 +106,8 @@ int main() {
         return a.distance < b.distance;
     });
 
-    std::cout << "Maximum distance with drag: " 
+    std::cout << "Using k_over_m = " << k_over_m << std::endl
+              <<  "Maximum distance with drag: " 
               <<  max_drag.distance
               << " m at " 
               <<  max_drag.angle 
