@@ -1,14 +1,53 @@
 #include <vector>
 #include <array>
 #include <iostream>
-#include <iomanip>  // For std::fixed and std::setprecision
+#include <iomanip>
 #include "math.h"
+#include <functional>
 
 //#define DEBUG
 
 // 4D state: [x_pos, y_pos, x_vel, y_vel]
 typedef std::array<double,4> State;
 
+template<typename State>
+using IntegratorFunc = State(*)(const State&, double, double, 
+                               std::function<void(const State&, double, State&)>);
+
+//Forward Euler (Explicit Euler)
+template<typename DerivativeFunc>
+State euler_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
+    State deriv;
+    deriv_func(state, t, deriv);  // Compute derivative at current state
+    
+    State next_state;
+    for (size_t i = 0; i < state.size(); ++i) {
+        next_state[i] = state[i] + dt * deriv[i];  // Update state
+    }
+    return next_state;
+}
+
+//Heun's Method (Trapezoidal Rule)
+template<typename DerivativeFunc>
+State heun_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
+    State k1, k2, temp;
+    
+    // Predictor (Euler step)
+    deriv_func(state, t, k1);
+    for (size_t i = 0; i < state.size(); ++i) {
+        temp[i] = state[i] + dt * k1[i];
+    }
+    
+    // Corrector (Average slopes)
+    deriv_func(temp, t + dt, k2);
+    State next_state;
+    for (size_t i = 0; i < state.size(); ++i) {
+        next_state[i] = state[i] + 0.5 * dt * (k1[i] + k2[i]);
+    }
+    return next_state;
+}
+
+//Fourth Order Runge-Kutta
 template<typename DerivativeFunc>
 State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
     State k1, k2, k3, k4, temp;
@@ -53,7 +92,8 @@ struct ScenarioResult {
 };
 
 ScenarioResult simulate_trajectory(double angle_deg, double v0, double h0, 
-                                   double dt, double g, double k_over_m = 0) {                                
+                                   double dt, double g, double k_over_m = 0,
+                                   IntegratorFunc<State> integrator = euler_step) {                              
     const double angle_rad = angle_deg * M_PI / 180.0;
     State state = {0.0, h0, v0*cos(angle_rad), v0*sin(angle_rad)};
     double t = 0.0;
@@ -66,7 +106,7 @@ ScenarioResult simulate_trajectory(double angle_deg, double v0, double h0,
     while (state[1] >= 0.0) {
         last_x = state[0];
         last_y = state[1];
-        state = rk4_step(state, t, dt, deriv);
+        state = integrator(state, t, dt, deriv);
         t += dt;
     }
 
@@ -90,7 +130,7 @@ int main() {
     
     // Parameter sweep
     for (double angle = 40.0; angle <= 45.1; angle += .001) {
-        results.push_back(simulate_trajectory(angle, v0, h0, deltaT, g, k_over_m));
+        results.push_back(simulate_trajectory(angle, v0, h0, deltaT, g, k_over_m,rk4_step));
     }
 
     // Find maximum distance scenario
