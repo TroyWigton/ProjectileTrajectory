@@ -11,6 +11,8 @@
 // 4D state: [x_pos, y_pos, x_vel, y_vel]
 typedef std::array<double,4> State;
 
+enum StateIndex { X_POS = 0, Y_POS = 1, X_VEL = 2, Y_VEL = 3 };
+
 template<typename State>
 using IntegratorFunc = State(*)(const State&, double, double, 
                                std::function<void(const State&, double, State&)>);
@@ -208,33 +210,97 @@ ScenarioResult simulate_trajectory(double angle_deg, double v0, double h0,
     return {angle_deg, v0, h0,dt, impact_x};
 }
 
-int main() {
-    const double g = 9.81;   // m/s²
-    const double k_over_m = 0.0025;  // density * Cd * A / (2m) 
-    //const double k_over_m = 0.0;   // No Drag scenario (validation testing)
-    // Vacuum 0.0, GolfBall .0025, PingPongBall .01
+// Modified golden-section search for maximization
+template<typename Func>
+double golden_section_search_max(Func f, double a, double b, double tol, bool verbose = false) {
+    const double golden_ratio = (1.0 + sqrt(5.0)) / 2.0;
+    const double inv_golden_ratio = 1.0 / golden_ratio;
+    
+    double c = b - (b - a) * inv_golden_ratio;
+    double d = a + (b - a) * inv_golden_ratio;
+    double fc = f(c);
+    double fd = f(d);
+    
+    if (verbose) {
+        std::cout << "Starting golden-section maximization in [" << a << ", " << b << "]\n";
+        std::cout << "Initial points: " << c << "° (" << fc << "m), " 
+                  << d << "° (" << fd << "m)\n";
+    }
+    
+    while (std::abs(c - d) > tol) {
+        if (fc > fd) {  // We want to keep the higher value for maximization
+            b = d;
+            d = c;
+            fd = fc;
+            c = b - (b - a) * inv_golden_ratio;
+            fc = f(c);
+        } else {
+            a = c;
+            c = d;
+            fc = fd;
+            d = a + (b - a) * inv_golden_ratio;
+            fd = f(d);
+        }
+        
+        if (verbose) {
+            std::cout << "New bracket: [" << a << ", " << b << "], "
+                      << "points: " << c << "° (" << fc << "m), "
+                      << d << "° (" << fd << "m)\n";
+        }
+    }
+    
+    double optimal = (a + b) / 2.0;
+    if (verbose) {
+        std::cout << "Converged to " << optimal << " degrees with distance " 
+                  << f(optimal) << " m\n";
+    }
+    return optimal;
+}
 
-    const double deltaT = .001;
+int main() {
+    const double g = 9.81;
+    const double deltaT = 0.001;
     const double v0 = 50;
     const double h0 = 0.0;
+    const double angle_tolerance = 0.0000000001;
 
-    std::vector<ScenarioResult> results;
+    const double k_over_m = 0.0;   // No Drag scenario (validation testing)
+    // Vacuum 0.0, GolfBall .0025, PingPongBall .01
+    //const double k_over_m = 0.0025;
+
+    auto distance_func = [&](double angle_deg) {
+        auto result = simulate_trajectory(angle_deg, v0, h0, deltaT, g, k_over_m, rk4_step);
+        return result.distance;
+    };
+
+    // Create a wider initial bracket that definitely contains the maximum
+    double a = 10.0;
+    double b = 46.0;
     
-    // Parameter sweep
-    for (double angle = 40.0; angle <= 45.1; angle += .001) {
-        results.push_back(simulate_trajectory(angle, v0, h0, deltaT, g, k_over_m,rk4_step));
+    // First perform a coarse scan to verify unimodality
+    std::cout << "Coarse scan to verify maximum is in bracket:\n";
+    for (double angle = a; angle <= b; angle += 2.0) {
+        double dist = distance_func(angle);
+        std::cout << angle << "°: " << dist << " m\n";
     }
 
-    // Find maximum distance scenario
-    auto max_drag = *std::max_element(results.begin(), results.end(),
-    [](const auto& a, const auto& b) {
-        return a.distance < b.distance;
-    });
+    // Run optimization with careful initialization
+    std::cout << "\nRunning golden-section maximization:\n";
+    double optimal_angle = golden_section_search_max(distance_func, a, b, angle_tolerance, true);
 
-    std::cout << "Using k_over_m = " << k_over_m << std::endl
-              <<  "Maximum distance with drag: " 
-              <<  max_drag.distance
-              << " m at " 
-              <<  max_drag.angle 
-              << " degrees\n";
+    // Final verification with tolerance check
+    std::cout << "\nFinal verification near optimum (tolerance = " << angle_tolerance << "°):\n";
+    for (double angle = optimal_angle - 1.0; angle <= optimal_angle + 1.0; angle += 0.1) {
+        double dist = distance_func(angle);
+        double diff = std::abs(angle - optimal_angle);
+        
+        std::cout << angle << "°: " << dist << " m";
+        
+        if (diff <= angle_tolerance) {
+            std::cout << " <-- WITHIN TOLERANCE OF OPTIMUM";
+        }
+        std::cout << "\n";
     }
+
+    return 0;
+}
