@@ -4,7 +4,7 @@ Compute the optimal launch angle for a projectile to achieve the furthest horizo
 
 ## Description
 
-We learned in physics class that launching a projectile at 45 degrees from horizontal achieves the optimal horizontal distance travled before the object returns to the launch height level (ground).  We learned how to prove this result in the absense of any aerodynamic drag.  But questions remain. Is 45 degress still an optimal angle when launched from above ground level?  Does the optimum solution differ in the presense of aerodynamic drag, and if so, what is the influence of balistic coefficient (m/Cd/A)?
+We learned in physics class that launching a projectile at 45 degrees from horizontal achieves the optimal horizontal distance travled before the object returns to the launch height level (ground).  We learned how to prove this result in the absense of any aerodynamic drag.  But questions remain. Is 45 degress still an optimal angle when launched from above ground level?  Does the optimum solution differ in the presense of aerodynamic drag, and if so, by what measure, based on representative measures such as [balistic coefficient (m/Cd/A)](https://en.wikipedia.org/wiki/Ballistic_coefficient) or its inverse k/m.
 
 ## Getting Started
 
