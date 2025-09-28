@@ -48,15 +48,15 @@ ScenarioResult simulate_trajectory(double angle_deg, double v0, double h0,
             drag_deriv(s, t, d, g, k_over_m);
     };
 
-    while (state[1] >= 0.0) {
-        last_x = state[0];
-        last_y = state[1];
+    while (state[Y_POS] >= 0.0) { // While above ground
+        last_x = state[X_POS];
+        last_y = state[Y_POS];
         state = integrator(state, t, dt, deriv);
         t += dt;
     }
 
     // Linear interpolation for impact point
-    const double impact_x = last_x + (0 - last_y) * (state[0] - last_x)/(state[1] - last_y);
+    const double impact_x = last_x + (0 - last_y) * (state[X_POS] - last_x)/(state[Y_POS] - last_y);
     
     return {angle_deg, v0, h0,dt, impact_x};
 }
