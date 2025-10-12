@@ -37,7 +37,7 @@ Maximum distance with drag: 175.3 m at 42.1080 degrees
 
 Should cmake not be available on the build machine. Compiling by command line on a mac is performed as follows.
 
-`clang++ -std=c++14 -o3 -o main src/*.cpp -I/include`
+`clang++ -std=c++14 -O3 -o main src/*.cpp -I include`
 
 ## Authors
 
