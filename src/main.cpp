@@ -12,35 +12,7 @@
 //#define DEBUG // define before local includes to enable debug mode in those files
 #include "golden_section.hpp"
 #include "integrators.hpp"
-struct ScenarioResult {
-    double angle;
-    double velocity;
-    double height;
-    double deltaT;
-    double distance;
-};
-
-template<typename DerivFunc>
-ScenarioResult simulate_trajectory(double angle_deg, double v0, double h0, 
-                                   double dt, DerivFunc deriv_func,
-                                   IntegratorFunc<State> integrator = euler_step) {                              
-    const double angle_rad = angle_deg * M_PI / 180.0;
-    State state = {0.0, h0, v0*cos(angle_rad), v0*sin(angle_rad)};
-    double t = 0.0;
-    double last_x = 0.0, last_y = h0;
-
-    while (state[Y_POS] >= 0.0) { // While above ground
-        last_x = state[X_POS];
-        last_y = state[Y_POS];
-        state = integrator(state, t, dt, deriv_func);
-        t += dt;
-    }
-
-    // Linear interpolation for impact point
-    const double impact_x = last_x + (0 - last_y) * (state[X_POS] - last_x)/(state[Y_POS] - last_y);
-    
-    return {angle_deg, v0, h0, dt, impact_x};
-}
+#include "simulation.hpp"
 
 int main() {
     const double g = 9.81;
@@ -56,12 +28,10 @@ int main() {
     std::cout << "Using drag coefficient k/m = " << k_over_m << "\n";
     std::cout << "Target distance precision: " << distance_tolerance << " m\n";
 
+    Simulation simulation(v0, drag_deriv, rk4_step_with_params, g, k_over_m, h0);
+
     auto distance_func = [&](double angle_deg) {
-        auto deriv = [&](const State& s, double t, State& d) {
-            drag_deriv(s, t, d, g, k_over_m);
-        };
-        auto result = simulate_trajectory(angle_deg, v0, h0, deltaT, deriv, rk4_step);
-        return result.distance;
+        return simulation.run(angle_deg, deltaT).distance;
     };
 
     // Create a wide initial bracket that definitely contains the maximum

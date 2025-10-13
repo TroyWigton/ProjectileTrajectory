@@ -18,7 +18,7 @@ void drag_deriv_linear(const State& s, double t, State& deriv, double g, double 
     deriv[Y_VEL] = -g - k_over_m * s[Y_VEL];  // dvy/dt = -g -k/m * vy
 }
 
-void no_drag_deriv(const State& s, double t, State& deriv, double g) {
+void no_drag_deriv(const State& s, double t, State& deriv, double g, double) {
     deriv[X_POS] = s[X_VEL];  // dx/dt = vx
     deriv[Y_POS] = s[Y_VEL];  // dy/dt = vy
     deriv[X_VEL] = 0.0;       // dvx/dt = 0

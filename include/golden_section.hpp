@@ -27,8 +27,10 @@ double golden_section_search_max(Func f, double a, double b, double tol, bool ve
                   << d << "° (" << fd << "m)\n";
     }
     
+    unsigned int iteration = 0;
     // Use interval width as the stopping criterion
     while ((b - a) > tol) {
+        ++iteration;
         if (fc > fd) {  // keep the higher value for maximization
             b = d;
             d = c;
@@ -42,9 +44,9 @@ double golden_section_search_max(Func f, double a, double b, double tol, bool ve
             d = a + (b - a) * inv_golden_ratio;
             fd = f(d);
         }
-        
+    
         if (verbose) {
-            std::cout << "New bracket: [" << a << ", " << b << "], "
+            std::cout << "Iteration " << iteration << ": New bracket: [" << a << ", " << b << "], "
                       << "points: " << c << "° (" << fc << "m), "
                       << d << "° (" << fd << "m)\n";
         }
