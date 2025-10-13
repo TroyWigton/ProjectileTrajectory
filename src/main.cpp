@@ -6,28 +6,12 @@
 #include <functional>
 #include <string>
 #include "constants.hpp"
+#include "types.hpp"
+#include "derivative_functions.hpp"
 
 //#define DEBUG // define before local includes to enable debug mode in those files
 #include "golden_section.hpp"
 #include "integrators.hpp"
-
-enum StateIndex { X_POS = 0, Y_POS = 1, X_VEL = 2, Y_VEL = 3 };
-
-void drag_deriv(const State& s, double t, State& deriv, double g, double k_over_m) {
-    const double v = sqrt(s[X_VEL]*s[X_VEL] + s[Y_VEL]*s[Y_VEL]);
-    deriv[X_POS] = s[X_VEL];  // dx/dt = vx
-    deriv[Y_POS] = s[Y_VEL];  // dy/dt = vy
-    deriv[X_VEL] = -k_over_m * v * s[X_VEL];  // dvx/dt = -k/m * v * vx
-    deriv[Y_VEL] = -g - k_over_m * v * s[Y_VEL];  // dvy/dt = -g -k/m * v * vy
-}
-
-void no_drag_deriv(const State& s, double t, State& deriv, double g) {
-    deriv[X_POS] = s[X_VEL];  // dx/dt = vx
-    deriv[Y_POS] = s[Y_VEL];  // dy/dt = vy
-    deriv[X_VEL] = 0.0;       // dvx/dt = 0
-    deriv[Y_VEL] = -g;        // dvy/dt = -g
-}
-
 struct ScenarioResult {
     double angle;
     double velocity;
@@ -36,46 +20,47 @@ struct ScenarioResult {
     double distance;
 };
 
+template<typename DerivFunc>
 ScenarioResult simulate_trajectory(double angle_deg, double v0, double h0, 
-                                   double dt, double g, double k_over_m = 0,
+                                   double dt, DerivFunc deriv_func,
                                    IntegratorFunc<State> integrator = euler_step) {                              
     const double angle_rad = angle_deg * M_PI / 180.0;
     State state = {0.0, h0, v0*cos(angle_rad), v0*sin(angle_rad)};
     double t = 0.0;
     double last_x = 0.0, last_y = h0;
-    
-    auto deriv = [&](const State& s, double t, State& d) {
-            drag_deriv(s, t, d, g, k_over_m);
-    };
 
     while (state[Y_POS] >= 0.0) { // While above ground
         last_x = state[X_POS];
         last_y = state[Y_POS];
-        state = integrator(state, t, dt, deriv);
+        state = integrator(state, t, dt, deriv_func);
         t += dt;
     }
 
     // Linear interpolation for impact point
     const double impact_x = last_x + (0 - last_y) * (state[X_POS] - last_x)/(state[Y_POS] - last_y);
     
-    return {angle_deg, v0, h0,dt, impact_x};
+    return {angle_deg, v0, h0, dt, impact_x};
 }
-
-
 
 int main() {
     const double g = 9.81;
     const double deltaT = 0.001;
-    const double v0 = 50;
+    const double v0 = 100;
     const double h0 = 0.0;
-    const double angle_tolerance = 0.000001;
+    const double distance_tolerance = 0.01; // Maximum distance loss (m) tolerable at angle precision boundary
 
-    //const double k_over_m = 0.0;   // No Drag scenario (validation testing)
+    double k_over_m; // 
     // Vacuum 0.0, GolfBall .0025, PingPongBall .01
-    const double k_over_m = 0.0025;
+    // k_over_m = 0.0;   // No Drag scenario (validation testing)
+    k_over_m = 0.0025;
+    std::cout << "Using drag coefficient k/m = " << k_over_m << "\n";
+    std::cout << "Target distance precision: " << distance_tolerance << " m\n";
 
     auto distance_func = [&](double angle_deg) {
-        auto result = simulate_trajectory(angle_deg, v0, h0, deltaT, g, k_over_m, rk4_step);
+        auto deriv = [&](const State& s, double t, State& d) {
+            drag_deriv(s, t, d, g, k_over_m);
+        };
+        auto result = simulate_trajectory(angle_deg, v0, h0, deltaT, deriv, rk4_step);
         return result.distance;
     };
 
@@ -84,22 +69,80 @@ int main() {
     double b = 46.0;
     std::cout << std::fixed << std::setprecision(6);
 
-    std::cout << "\nRunning golden-section maximization:\n";
-    double optimal_angle = golden_section_search_max(distance_func, a, b, angle_tolerance);
+    // Start with a coarse angle tolerance to find the optimal angle quickly
+    double coarse_angle_tol = 0.1;
+    std::cout << "\nPhase 1: Finding approximate optimal angle (coarse search):\n";
+    double optimal_angle = golden_section_search_max(distance_func, a, b, coarse_angle_tol);
+    double max_distance = distance_func(optimal_angle);
+    std::cout << "Approximate optimal angle: " << optimal_angle << " degrees\n";
+    std::cout << "Maximum distance: " << max_distance << " m\n";
 
-    // Final verification with tolerance check
-    std::cout << "\nFinal verification near optimum (tolerance = " << angle_tolerance << "°):\n";
-    for (double angle = optimal_angle - 1.0; angle <= optimal_angle + 1.0; angle += 0.1) {
-        double dist = distance_func(angle);
-        double diff = std::abs(angle - optimal_angle);
+    // Now refine to find the angle precision needed for the distance tolerance
+    std::cout << "\nPhase 2: Finding angle precision for distance tolerance " 
+              << distance_tolerance << " m:\n";
+    
+    // Binary search to find the angle offset that produces the distance tolerance
+    double angle_offset = 0.1;  // Start with 0.1 degree offset
+    double low = 0.0;
+    double high = 5.0;  // Maximum reasonable angle deviation
+    
+    while (high - low > 1e-9) {  // Very fine precision for angle determination
+        angle_offset = (low + high) / 2.0;
         
-        std::cout << angle << "°: " << dist << " m";
+        double dist_plus = distance_func(optimal_angle + angle_offset);
+        double dist_minus = distance_func(optimal_angle - angle_offset);
         
-        if (diff <= angle_tolerance) {
-            std::cout << " <-- WITHIN TOLERANCE OF OPTIMUM";
+        // Check if either side falls outside the tolerance
+        double max_deviation = std::max(
+            std::abs(max_distance - dist_plus),
+            std::abs(max_distance - dist_minus)
+        );
+        
+        if (max_deviation > distance_tolerance) {
+            high = angle_offset;  // Angle offset is too large
+        } else {
+            low = angle_offset;   // Angle offset might be acceptable
         }
-        std::cout << "\n";
     }
+    
+    double required_angle_precision = angle_offset;
+    
+    // Now refine the optimal angle to this precision
+    std::cout << "\nPhase 3: Refining optimal angle to required precision:\n";
+    a = optimal_angle - 2.0 * required_angle_precision;
+    b = optimal_angle + 2.0 * required_angle_precision;
+    optimal_angle = golden_section_search_max(distance_func, a, b, required_angle_precision / 10.0);
+    max_distance = distance_func(optimal_angle);
+    
+    // Calculate appropriate precision for displaying angle precision
+    // Find the order of magnitude of the angle precision
+    int angle_precision_digits = 1;
+    if (required_angle_precision > 0) {
+        angle_precision_digits = std::max(1, static_cast<int>(-std::log10(required_angle_precision)) + 1);
+    }
+    
+    std::cout << "\n=== RESULTS ===\n";
+    std::cout << "Optimal launch angle: " << optimal_angle << " degrees\n";
+    std::cout << "Maximum distance: " << max_distance << " m\n";
+    std::cout << std::setprecision(angle_precision_digits);
+    std::cout << "Required angle precision: ±" << required_angle_precision << " degrees\n";
+    std::cout << std::setprecision(6);  // Reset for other outputs
+    std::cout << "  (to maintain distance within ±" << distance_tolerance << " m)\n";
+    
+    // Final verification
+    std::cout << "\nVerification at angle tolerance boundaries:\n";
+    double dist_at_optimal = distance_func(optimal_angle);
+    double dist_plus = distance_func(optimal_angle + required_angle_precision);
+    double dist_minus = distance_func(optimal_angle - required_angle_precision);
+    
+    std::cout << "  Angle: " << (optimal_angle - required_angle_precision) 
+              << "° → Distance: " << dist_minus 
+              << " m (Δ = " << (max_distance - dist_minus) << " m)\n";
+    std::cout << "  Angle: " << optimal_angle 
+              << "° → Distance: " << dist_at_optimal << " m (optimal)\n";
+    std::cout << "  Angle: " << (optimal_angle + required_angle_precision) 
+              << "° → Distance: " << dist_plus 
+              << " m (Δ = " << (max_distance - dist_plus) << " m)\n";
 
     return 0;
 }
