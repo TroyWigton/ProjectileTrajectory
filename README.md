@@ -4,7 +4,22 @@ Compute the optimal launch angle for a projectile to achieve the furthest horizo
 
 ## Description
 
-We learned in physics class that launching a projectile at 45 degrees from horizontal achieves the optimal horizontal distance travled before the object returns to the launch height level (ground).  We learned how to prove this result in the absense of any aerodynamic drag.  But questions remain. Is 45 degress still an optimal angle when launched from above ground level?  Does the optimum solution differ in the presense of aerodynamic drag, and if so, by what measure, based on representative factors such as [balistic coefficient (m/Cd/A)](https://en.wikipedia.org/wiki/Ballistic_coefficient) or its inverse k/m.
+
+There exists an optimum angle $\theta_{opt}$ when launching a projectile subject to gravity, such that a maximum horizontal distance is flown before falling back to a reference launch height (or ground level).   This angle can be predicted analytically in the absence of atmospheric drag using the following formula.
+
+$$\theta_{opt} = \arctan\left(\frac{v_0}{\sqrt{2gh + v_0^2}}\right)$$
+
+Where $v_0$ represents initial velocity, $g$ is the gravitational acceleration constant, and $h$ is the launch height.  Notice a familiar result from elementary physics, with $h = 0$, $\theta_{opt} = 45^\circ$
+
+In the presence of atmospheric drag, the optimal launch angle decreases. We don't have an analytic formula to calculate this result. Therefore we will simulate the atmospheric drag effect on the projectile.  Where drag is proportional to instantaneous velocity squared in each time step according to the following formula.
+
+$$F_d = \frac{1}{2} \rho v^2 C_d A$$
+
+$F_d = ma$ represents the drag force acting on the projectile. Consolidating factors that are assumed constant during the simulation, we'll parameterize the effect of drag and mass into a derivative function where the only tunable parameter is the inverse ballistic coefficient $\frac{k}{m}$ or "k_over_m".
+
+[ballistic coefficient (m/Cd/A)](https://en.wikipedia.org/wiki/Ballistic_coefficient)
+
+
 
 ## Getting Started
 
