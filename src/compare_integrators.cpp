@@ -25,7 +25,7 @@ int main() {
 
     // 1. Find optimal angle first (using RK4 as baseline)
     SystemIntegrator baseline_integrator = rk4_step<State, SystemDerivative>;
-    Simulation baseline_sim(v0, drag_deriv, baseline_integrator, g, k_over_m, h0);
+    Simulation baseline_sim(k_over_m, baseline_integrator, v0);
     auto distance_func = [&](double angle_deg) {
         return baseline_sim.run(angle_deg, 0.001).distance;
     };
@@ -36,7 +36,7 @@ int main() {
     // 2. Establish Ground Truth using RK8 with very small dt
     double ground_truth_dt = 1e-4;
     SystemIntegrator integrator_rk8 = rk8_step<State, SystemDerivative>;
-    Simulation sim_ground_truth(v0, drag_deriv, integrator_rk8, g, k_over_m, h0);
+    Simulation sim_ground_truth(k_over_m, integrator_rk8, v0);
     double ground_truth_distance = sim_ground_truth.run(optimal_angle, ground_truth_dt).distance;
     
     std::cout << "Ground Truth (RK8, dt=" << ground_truth_dt << "): " << ground_truth_distance << " m\n\n";
@@ -56,7 +56,7 @@ int main() {
          ScenarioResult result;
          
          while (true) {
-             Simulation sim(v0, drag_deriv, integ, g, k_over_m, h0);
+             Simulation sim(k_over_m, integ, v0);
              result = sim.run(optimal_angle, current_dt);
              current_error = std::abs(result.distance - ground_truth_distance);
              

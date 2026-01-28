@@ -2,20 +2,12 @@
 #include "../include/constants.hpp"
 #include <cmath>
 
-Simulation::Simulation(double v0,
-                       DerivativeFuncPtr derivative,
+Simulation::Simulation(double k_over_m,
                        SystemIntegrator integrator,
-                       double g,
-                       double k_over_m,
-                       double h0)
-    : Simulation(g, k_over_m, v0, h0, derivative, integrator) {}
-
-Simulation::Simulation(double g,
-                       double k_over_m,
                        double v0,
-                       double h0,
                        DerivativeFuncPtr derivative,
-                       SystemIntegrator integrator)
+                       double g,
+                       double h0)
     : m_g(g),
       m_k_over_m(k_over_m),
       m_v0(v0),

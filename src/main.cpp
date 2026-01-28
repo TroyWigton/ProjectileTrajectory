@@ -32,7 +32,7 @@ int main() {
     // to allow implicit conversion in Simulation constructor
     SystemIntegrator integrator = rk4_step<State, SystemDerivative>;
 
-    Simulation simulation(v0, drag_deriv, integrator, g, k_over_m, h0);
+    Simulation simulation(k_over_m, integrator, v0);
 
     auto distance_func = [&](double angle_deg) {
         return simulation.run(angle_deg, deltaT).distance;

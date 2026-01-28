@@ -3,6 +3,7 @@
 
 #include "types.hpp"
 #include "integrators.hpp"
+#include "derivative_functions.hpp"
 
 struct ScenarioResult {
     double angle;
@@ -15,19 +16,12 @@ struct ScenarioResult {
 
 class Simulation {
 public:
-    Simulation(double v0,
-               DerivativeFuncPtr derivative,
+    Simulation(double k_over_m,
                SystemIntegrator integrator,
+               double v0 = 100.0,
+               DerivativeFuncPtr derivative = drag_deriv,
                double g = 9.81,
-               double k_over_m = 0.0,
                double h0 = 0.0);
-
-    Simulation(double g,
-               double k_over_m,
-               double v0,
-               double h0,
-               DerivativeFuncPtr derivative,
-               SystemIntegrator integrator);
 
     ScenarioResult run(double angle_deg, double dt) const;
 
