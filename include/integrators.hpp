@@ -10,8 +10,12 @@ template<typename State>
 using IntegratorFunc = State(*)(const State&, double, double, 
                                std::function<void(const State&, double, State&)>);
 
+// Standard derivative function signature for the system (no parameters)
+using SystemDerivative = std::function<void(const State&, double, State&)>;
+// Standard integrator signature matching the templated functions instantiation
+using SystemIntegrator = State(*)(const State&, double, double, SystemDerivative);
+
 using DerivativeFuncPtr = void(*)(const State&, double, State&, double, double);
-using IntegratorWithParamsFuncPtr = State(*)(const State&, double, double, DerivativeFuncPtr, double, double);
 
 
 //Forward Euler (Explicit Euler)
@@ -162,46 +166,6 @@ State rk8_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
     }
     
     return next_state;
-}
-
-inline State euler_step_with_params(const State& state, double t, double dt,
-                                    DerivativeFuncPtr deriv_func,
-                                    double g,
-                                    double k_over_m) {
-    auto bound = [&](const State& s, double time, State& d) {
-        deriv_func(s, time, d, g, k_over_m);
-    };
-    return euler_step(state, t, dt, bound);
-}
-
-inline State heun_step_with_params(const State& state, double t, double dt,
-                                   DerivativeFuncPtr deriv_func,
-                                   double g,
-                                   double k_over_m) {
-    auto bound = [&](const State& s, double time, State& d) {
-        deriv_func(s, time, d, g, k_over_m);
-    };
-    return heun_step(state, t, dt, bound);
-}
-
-inline State rk4_step_with_params(const State& state, double t, double dt,
-                                  DerivativeFuncPtr deriv_func,
-                                  double g,
-                                  double k_over_m) {
-    auto bound = [&](const State& s, double time, State& d) {
-        deriv_func(s, time, d, g, k_over_m);
-    };
-    return rk4_step(state, t, dt, bound);
-}
-
-inline State rk8_step_with_params(const State& state, double t, double dt,
-                                  DerivativeFuncPtr deriv_func,
-                                  double g,
-                                  double k_over_m) {
-    auto bound = [&](const State& s, double time, State& d) {
-        deriv_func(s, time, d, g, k_over_m);
-    };
-    return rk8_step(state, t, dt, bound);
 }
 
 #endif // INTEGRATORS_HPP

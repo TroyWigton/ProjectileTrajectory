@@ -16,7 +16,7 @@ class Simulation {
 public:
     Simulation(double v0,
                DerivativeFuncPtr derivative,
-               IntegratorWithParamsFuncPtr integrator = rk4_step_with_params,
+               SystemIntegrator integrator,
                double g = 9.81,
                double k_over_m = 0.0,
                double h0 = 0.0);
@@ -26,7 +26,7 @@ public:
                double v0,
                double h0,
                DerivativeFuncPtr derivative,
-               IntegratorWithParamsFuncPtr integrator = rk4_step_with_params);
+               SystemIntegrator integrator);
 
     ScenarioResult run(double angle_deg, double dt) const;
 
@@ -40,8 +40,10 @@ private:
     double m_k_over_m;
     double m_v0;
     double m_h0;
-    DerivativeFuncPtr m_derivative;
-    IntegratorWithParamsFuncPtr m_integrator;
+    
+    // Abstracted stepper function that knows how to advance the system
+    // (Integrator + Derivative + Parameters all bound)
+    std::function<State(const State&, double, double)> m_stepper;
 };
 
 #endif // SIMULATION_HPP

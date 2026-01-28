@@ -1,5 +1,5 @@
-#include "derivative_functions.hpp"
-#include "types.hpp"
+#include "../include/derivative_functions.hpp"
+#include "../include/types.hpp"
 #include "math.h"
 
 void drag_deriv(const State& s, double t, State& deriv, double g, double k_over_m) {

@@ -5,14 +5,14 @@
 #include "math.h"
 #include <functional>
 #include <string>
-#include "constants.hpp"
-#include "types.hpp"
-#include "derivative_functions.hpp"
+#include "../include/constants.hpp"
+#include "../include/types.hpp"
+#include "../include/derivative_functions.hpp"
 
 //#define DEBUG // define before local includes to enable debug mode in those files
-#include "golden_section.hpp"
-#include "integrators.hpp"
-#include "simulation.hpp"
+#include "../include/golden_section.hpp"
+#include "../include/integrators.hpp"
+#include "../include/simulation.hpp"
 
 int main() {
     const double g = 9.81;
@@ -28,7 +28,11 @@ int main() {
     std::cout << "Using drag coefficient k/m = " << k_over_m << "\n";
     std::cout << "Target distance precision: " << distance_tolerance << " m\n";
 
-    Simulation simulation(v0, drag_deriv, rk4_step_with_params, g, k_over_m, h0);
+    // Cast the template function to the specific SystemIntegrator type
+    // to allow implicit conversion in Simulation constructor
+    SystemIntegrator integrator = rk4_step<State, SystemDerivative>;
+
+    Simulation simulation(v0, drag_deriv, integrator, g, k_over_m, h0);
 
     auto distance_func = [&](double angle_deg) {
         return simulation.run(angle_deg, deltaT).distance;
@@ -40,7 +44,7 @@ int main() {
     std::cout << std::fixed << std::setprecision(6);
 
     // Start with a coarse angle tolerance to find the optimal angle quickly
-    double coarse_angle_tol = 0.1;
+    double coarse_angle_tol = 0.01;
     std::cout << "\nPhase 1: Finding approximate optimal angle (coarse search):\n";
     double optimal_angle = golden_section_search_max(distance_func, a, b, coarse_angle_tol);
     double max_distance = distance_func(optimal_angle);

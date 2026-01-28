@@ -1,27 +1,34 @@
-#include "simulation.hpp"
-#include "constants.hpp"
+#include "../include/simulation.hpp"
+#include "../include/constants.hpp"
 #include <cmath>
 
 Simulation::Simulation(double v0,
-                                             DerivativeFuncPtr derivative,
-                                             IntegratorWithParamsFuncPtr integrator,
-                                             double g,
-                                             double k_over_m,
-                                             double h0)
-        : Simulation(g, k_over_m, v0, h0, derivative, integrator) {}
+                       DerivativeFuncPtr derivative,
+                       SystemIntegrator integrator,
+                       double g,
+                       double k_over_m,
+                       double h0)
+    : Simulation(g, k_over_m, v0, h0, derivative, integrator) {}
 
 Simulation::Simulation(double g,
-                                             double k_over_m,
-                                             double v0,
-                                             double h0,
-                                             DerivativeFuncPtr derivative,
-                                             IntegratorWithParamsFuncPtr integrator)
-        : m_g(g),
-            m_k_over_m(k_over_m),
-            m_v0(v0),
-            m_h0(h0),
-            m_derivative(derivative),
-            m_integrator(integrator) {}
+                       double k_over_m,
+                       double v0,
+                       double h0,
+                       DerivativeFuncPtr derivative,
+                       SystemIntegrator integrator)
+    : m_g(g),
+      m_k_over_m(k_over_m),
+      m_v0(v0),
+      m_h0(h0) {
+    // initialize stepper by binding parameters and derivative to the integrator
+    m_stepper = [integrator, derivative, g, k_over_m](const State& s, double t, double dt) -> State {
+        // Lambda to match SystemDerivative signature
+        auto bound_deriv = [derivative, g, k_over_m](const State& state, double time, State& out_d) {
+             derivative(state, time, out_d, g, k_over_m); 
+        };
+        return integrator(s, t, dt, bound_deriv);
+    };
+}
 
 ScenarioResult Simulation::run(double angle_deg, double dt) const {
     const double angle_rad = angle_deg * M_PI / 180.0;
@@ -33,7 +40,7 @@ ScenarioResult Simulation::run(double angle_deg, double dt) const {
     while (state[Y_POS] >= 0.0) {
         last_x = state[X_POS];
         last_y = state[Y_POS];
-        state = m_integrator(state, t, dt, m_derivative, m_g, m_k_over_m);
+        state = m_stepper(state, t, dt);
         t += dt;
     }
 
