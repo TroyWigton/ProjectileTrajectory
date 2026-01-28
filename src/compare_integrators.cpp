@@ -1,3 +1,14 @@
+/**
+ * @file compare_integrators.cpp
+ * @brief Analysis tool for comparing numerical integration schemes.
+ *
+ * This utility benchmarks different numerical integrators (Euler, Heun, RK4, RK8)
+ * by measuring their performance and accuracy against a high-precision ground truth.
+ *
+ * It determines the required time step (dt) and number of steps for each integrator
+ * to achieve a specific target distance tolerance. This helps in understanding the
+ * efficiency trade-offs (computational cost vs. accuracy) for each method.
+ */
 #include <vector>
 #include <array>
 #include <iostream>

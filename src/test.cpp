@@ -1,3 +1,18 @@
+/**
+ * @file test.cpp
+ * @brief Unit tests and validation suite for the Projectile Simulation library.
+ *
+ * This file contains a comprehensive test suite to verify the correctness and
+ * accuracy of the numerical integrators and trajectory simulations.
+ *
+ * Tests included:
+ * 1. Vacuum Trajectory Optimization: Verifies that the optimal angle is 45 degrees
+ *    when no drag is present (theoretical truth).
+ * 2. Integrator Consistency: Compares the results of Euler, Heun, and RK4 methods
+ *    against a high-precision Runge-Kutta 8 (RK8) baseline under drag conditions.
+ *    Ensures that less accurate methods drift within expected bounds relative to
+ *    simpler methods.
+ */
 #include <vector>
 #include <iostream>
 #include <iomanip>

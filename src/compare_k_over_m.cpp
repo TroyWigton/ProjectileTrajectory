@@ -1,3 +1,13 @@
+/**
+ * @file compare_k_over_m.cpp
+ * @brief Parametric study of the effect of drag properties on optimal trajectories.
+ *
+ * This program iterates experimentally through a range of drag coefficients
+ * (k/m ratios) to observe how the optimal launch angle and maximum distance change.
+ *
+ * It generates a table of results showing the relationship between increasing air resistance,
+ * the shallowing of the optimal launch angle, and the reduction in range.
+ */
 #include <iostream>
 #include <iomanip>
 #include <vector>

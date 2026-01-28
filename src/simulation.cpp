@@ -1,3 +1,16 @@
+/**
+ * @file simulation.cpp
+ * @brief Core logic for running individual projectile trajectory simulations.
+ *
+ * This file implements the Simulation class, which coordinates the setup and
+ * execution of a single projectile flight. It binds the specific integration method
+ * (stepper) with the physical derivative model and system constants.
+ *
+ * Key functionalities:
+ * - Initialization of the simulation environment (gravity, drag, wind, etc.).
+ * - Execution loop that steps the simulation until ground impact (y < 0).
+ * - Linear interpolation to find the precise landing coordinate between time steps.
+ */
 #include "../include/simulation.hpp"
 #include "../include/constants.hpp"
 #include <cmath>

@@ -1,3 +1,17 @@
+/**
+ * @file main.cpp
+ * @brief Main entry point for the Projectile Simulation application.
+ *
+ * This program calculates the optimal launch angle for a projectile to achieve
+ * maximum distance under the influence of atmospheric drag. It uses a Golden Section
+ * Search to optimize the angle and various numerical integration methods to simulate
+ * the trajectory.
+ * 
+ * Features:
+ * - Configurable drag coefficient (k/m)
+ * - Multi-phase optimization: Coarse search, precision finding, and refinement
+ * - Verification of results against tolerance boundaries
+ */
 #include <vector>
 #include <array>
 #include <iostream>

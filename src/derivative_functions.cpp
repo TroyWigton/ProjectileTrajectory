@@ -1,3 +1,16 @@
+/**
+ * @file derivative_functions.cpp
+ * @brief Implementation of physics models for projectile motion derivatives.
+ *
+ * This file contains the state derivative functions that describe the physical
+ * equations of motion for the projectile system. These functions are used by
+ * the numerical integrators to evolve the system state over time.
+ *
+ * Supported Models:
+ * - v_squared_drag: Standard quadratic air resistance (F_drag ~ v^2).
+ * - linear_drag: Linear air resistance (F_drag ~ v), useful for Stokes' law regime.
+ * - no_drag: Vacuum trajectory, theoretical baseline.
+ */
 #include "../include/derivative_functions.hpp"
 #include "../include/types.hpp"
 #include "math.h"
