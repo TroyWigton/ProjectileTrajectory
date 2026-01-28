@@ -31,6 +31,19 @@ The simulation solves the 2D projectile motion equations with quadratic air drag
   - $\dot{v_y} = -g - \frac{k}{m} v v_y$
   where $v = \sqrt{v_x^2 + v_y^2}$ and $\frac{k}{m}$ is the drag factor derived from $\frac{1}{2m} \rho C_d A$.
 
+#### Example Coefficients
+
+Below are calculated `k_over_m` values for common objects, assuming standard sea-level air density ($\rho \approx 1.225 \text{ kg/m}^3$).
+
+| Object | Mass ($kg$) | Diameter ($m$) | Drag Coeff ($C_d$) | Area ($m^2$) | `k_over_m` ($1/m$) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Vacuum** (No Drag) | - | - | 0.0 | - | **0.0** |
+| **9mm Bullet** (115gr FMJ) | 0.00745 | 0.009 | 0.295 | $6.36 \times 10^{-5}$ | **0.00154** |
+| **Golf Ball** | 0.04593 | 0.0427 | 0.30 | $1.43 \times 10^{-3}$ | **0.00573** |
+| **Ping Pong Ball** | 0.0027 | 0.040 | 0.47 | $1.26 \times 10^{-3}$ | **0.13398** |
+
+*Note: These are approximations using constant drag coefficients. Real-world ballistics involve velocity-dependent $C_d$ (Mach number variations), but these values provide good baselines for comparison.*
+
 ### Numerical Methods
 - **Integration**: Fourth-order Runge-Kutta (RK4) is used to advance the state vector in discrete time steps ($\Delta t$). This offers a good balance between speed and accuracy compared to Euler or Heun methods.
 - **Event Detection**: The simulation loop terminates when the vertical position $y < 0$. To determine the exact impact location, the program performs a linear interpolation between the last state above ground and the current state below ground.
@@ -97,47 +110,48 @@ Run the executable `./main`
 ### Sample Result
 
 ```
-Using drag coefficient k/m = 0.0025
-Target distance precision: 0.1 m
+Using drag coefficient k/m = 0.0057
+Target distance precision: 0.01 m
 
 Phase 1: Finding approximate optimal angle (coarse search):
-Approximate optimal angle: 37.907528 degrees
-Maximum distance: 398.029005 m
+Approximate optimal angle: 34.735268 degrees
+Maximum distance: 246.274544 m
 
-Phase 2: Finding angle precision for distance tolerance 0.100000 m:
+Phase 2: Finding angle precision for distance tolerance 0.010000 m:
 
 Phase 3: Refining optimal angle to required precision:
 
 === RESULTS ===
-Optimal launch angle: 37.912268 degrees
-Maximum distance: 398.029002 m
-Required angle precision: ±0.8 degrees
-  (to maintain distance within ±0.100000 m)
+Optimal launch angle: 34.737258 degrees
+Maximum distance: 246.274544 m
+Required angle precision: ±0.3 degrees
+  (to maintain distance within ±0.010000 m)
 
 Verification at angle tolerance boundaries:
-  Angle: 37.149193° → Distance: 397.930246 m (Δ = 0.098756 m)
-  Angle: 37.912268° → Distance: 398.029002 m (optimal)
-  Angle: 38.675343° → Distance: 397.928587 m (Δ = 0.100415 m)
+  Angle: 34.416829° → Distance: 246.264668 m (Δ = 0.009876 m)
+  Angle: 34.737258° → Distance: 246.274544 m (optimal)
+  Angle: 35.057687° → Distance: 246.264531 m (Δ = 0.010013 m)
 ```
 Run the executable `./compare_integrators`
 
 ### Sample Result 
 
 ```
-Drag coefficient k/m = 0.0025
+Project Comparison Tool
+Drag coefficient k/m = 0.0057
 Target precision: 0.01 m
 
-Optimal angle used for comparison: 37.9073 degrees
-Ground Truth (RK8, dt=0.0001): 398.029 m
+Optimal angle used for comparison: 34.7358 degrees
+Ground Truth (RK8, dt=0.0001): 246.275 m
 
 Comparison: Required Steps & dt to reach 0.01 m precision
 --------------------------------------------------------------------------------
 Integrator     Steps          dt (s)         Distance (m)        Error (m)
 --------------------------------------------------------------------------------
-Euler          9581           0.000976562    398.035             0.00630624
-Heun           150            0.0625         398.02              0.00895255
-RK4            75             0.125          398.023             0.00625146
-RK8            75             0.125          398.023             0.0062431
+Euler          14994          0.000488281    246.269             0.00535052
+Heun           118            0.0625         246.273             0.00161757
+RK4            118            0.0625         246.273             0.00120045
+RK8            118            0.0625         246.273             0.00119595
 ```
 
 ## Help

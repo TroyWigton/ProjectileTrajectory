@@ -17,7 +17,7 @@ int main() {
     const double v0 = 100;
     const double h0 = 0.0;
     const double distance_tolerance = 0.01;
-    const double k_over_m = 0.0025;
+    const double k_over_m = 0.0057; // Golf Ball approximation
 
     std::cout << "Project Comparison Tool\n";
     std::cout << "Drag coefficient k/m = " << k_over_m << "\n";

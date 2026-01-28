@@ -21,10 +21,16 @@ int main() {
     const double h0 = 0.0;
     const double distance_tolerance = 0.01; // Maximum distance loss (m) tolerable at angle precision boundary
 
-    double k_over_m; // 
-    // Vacuum 0.0, GolfBall .0025, PingPongBall .01
+    // Standard Drag Coefficients (k/m):
+    // Vacuum: 0.0
+    // 9mm Bullet: 0.0015
+    // Golf Ball: 0.0057
+    // Ping Pong Ball: 0.134
+    
+    double k_over_m = 0.0057; // Default to Golf Ball
+    
     // k_over_m = 0.0;   // No Drag scenario (validation testing)
-    k_over_m = 0.0025;
+
     std::cout << "Using drag coefficient k/m = " << k_over_m << "\n";
     std::cout << "Target distance precision: " << distance_tolerance << " m\n";
 

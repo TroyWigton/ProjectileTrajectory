@@ -14,7 +14,7 @@ function projectile_with_drag_optimization()
     % Initial conditions
     h0 = 0;              % Initial height (m)
     v0 = 100;              % Initial velocity magnitude (m/s)
-    k_over_m = 0.010;      % Drag coefficient over mass (1/m)
+    k_over_m = 0.0057;     % Drag coefficient over mass (1/m) - Golf Ball approx
     
     % Physical constants
     g = 9.81;             % Gravitational acceleration (m/s^2)
