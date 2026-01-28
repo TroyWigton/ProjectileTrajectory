@@ -135,12 +135,99 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    ```sh
    ./test
    ```
+   **Sample Results**
+   ```
+   Starting Test Suite: Vacuum Trajectory Optimization
+   Target Angle: 45 degrees
+   Tolerance: 0.05 degrees
+   k/m: 0
+   
+   Testing Integrator: Euler, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9998)
+   Testing Integrator: Euler, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9998)
+   Testing Integrator: Euler, Derivative: No Drag... PASSED (Optimal Angle: 44.9998)
+   Testing Integrator: Heun, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9999)
+   Testing Integrator: Heun, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9999)
+   Testing Integrator: Heun, Derivative: No Drag... PASSED (Optimal Angle: 44.9999)
+   Testing Integrator: RK4, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9999)
+   Testing Integrator: RK4, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9999)
+   Testing Integrator: RK4, Derivative: No Drag... PASSED (Optimal Angle: 44.9999)
+   Testing Integrator: RK8, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9999)
+   Testing Integrator: RK8, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9999)
+   Testing Integrator: RK8, Derivative: No Drag... PASSED (Optimal Angle: 44.9999)
+   
+   --------------------------------------------------
+   Starting Test Suite: Integrator Consistency (Non-zero Drag)
+   k/m: 0.0057
+   
+   Evaluating Derivative Function: V Squared Drag
+          Euler: Angle = 34.7324, Distance = 246.264
+           Heun: Angle = 34.7358, Distance = 246.275
+            RK4: Angle = 34.7358, Distance = 246.275
+            RK8: Angle = 34.7358, Distance = 246.275
+     -> Consistency Check (Euler vs RK8): PASSED
+        (Diffs - Angle: 0.00343658, Dist: 0.0109617)
+     -> Consistency Check (Heun vs RK8): PASSED
+        (Diffs - Angle: 0, Dist: 3.66264e-08)
+     -> Consistency Check (RK4 vs RK8): PASSED
+        (Diffs - Angle: 0, Dist: 9.37916e-13)
+   
+   Evaluating Derivative Function: Linear Drag
+          Euler: Angle = 44.2345, Distance = 966.492
+           Heun: Angle = 44.2359, Distance = 966.425
+            RK4: Angle = 44.2359, Distance = 966.425
+            RK8: Angle = 44.2359, Distance = 966.425
+     -> Consistency Check (Euler vs RK8): PASSED
+        (Diffs - Angle: 0.00141116, Dist: 0.0670337)
+     -> Consistency Check (Heun vs RK8): PASSED
+        (Diffs - Angle: 0, Dist: 1.27375e-07)
+     -> Consistency Check (RK4 vs RK8): PASSED
+        (Diffs - Angle: 0, Dist: 1.80762e-11)
+   
+   All tests passed successfully!
+   ```
 
 6. **Run Drag Coefficient Analysis**:
    Demonstrates how the optimal launch angle and maximum distance vary with increasing drag ($\frac{k}{m}$ from 0.0 to 0.2).
    ```sh
    ./compare_k_over_m
    ```
+   **Sample Results**:
+   ```
+   K/M Variation Analysis
+   --------------------------------------------------------
+   v0 = 100 m/s
+   integrator = RK4, dt = 0.001 s
+   --------------------------------------------------------
+          k/m      Optimal Angle (deg)    Max Distance (m)
+   --------------------------------------------------------
+      0.00000                 44.99986          1019.36799
+      0.00100                 40.92337           600.84063
+      0.00124                 40.30281           553.28964
+      0.00153                 39.63102           505.50411
+      0.00189                 38.91255           458.30923
+      0.00233                 38.16013           412.46152
+      0.00289                 37.37236           368.60698
+      0.00357                 36.56577           327.25561
+      0.00441                 35.74291           288.77216
+      0.00545                 34.91226           253.38064
+      0.00674                 34.08320           221.17880
+      0.00833                 33.25647           192.15838
+      0.01029                 32.44274           166.22760
+      0.01272                 31.64991           143.23317
+      0.01572                 30.86820           122.98019
+      0.01943                 30.11288           105.24900
+      0.02402                 29.38003            89.80873
+      0.02969                 28.66842            76.42763
+      0.03670                 27.98629            64.88067
+      0.04537                 27.33439            54.95465
+      0.05608                 26.69778            46.45142
+      0.06931                 26.09051            39.18970
+      0.08568                 25.50826            33.00564
+      0.10590                 24.95898            27.75276
+      0.13090                 24.42804            23.30121
+      0.16180                 23.91749            19.53672
+      0.20000                 23.42878            16.35945
+      ```
 
 ## Help
 
