@@ -13,7 +13,7 @@ using IntegratorFunc = State(*)(const State&, double, double,
 // Standard derivative function signature for the system (no parameters)
 using SystemDerivative = std::function<void(const State&, double, State&)>;
 // Standard integrator signature matching the templated functions instantiation
-using SystemIntegrator = State(*)(const State&, double, double, SystemDerivative);
+using SystemIntegrator = std::function<State(const State&, double, double, SystemDerivative)>;
 
 using DerivativeFuncPtr = void(*)(const State&, double, State&, double, double);
 
