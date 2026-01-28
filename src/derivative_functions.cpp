@@ -11,7 +11,6 @@ void drag_deriv_v_squared(const State& s, double t, State& deriv, double g, doub
 }
 
 void drag_deriv_linear(const State& s, double t, State& deriv, double g, double k_over_m) {
-    const double v = sqrt(s[X_VEL]*s[X_VEL] + s[Y_VEL]*s[Y_VEL]);
     deriv[X_POS] = s[X_VEL];  // dx/dt = vx
     deriv[Y_POS] = s[Y_VEL];  // dy/dt = vy
     deriv[X_VEL] = -k_over_m * s[X_VEL];  // dvx/dt = -k/m * vx
