@@ -15,9 +15,7 @@ In the presence of atmospheric drag, the optimal launch angle decreases. We don'
 
 $$F_d = \frac{1}{2} \rho v^2 C_d A$$
 
-$F_d = ma$ represents the drag force acting on the projectile. Consolidating factors that are assumed constant during the simulation, we'll parameterize the effect of drag and mass into a derivative function where the only tunable parameter is the inverse ballistic coefficient $\frac{k}{m}$ or "k_over_m".
-
-[ballistic coefficient (m/Cd/A)](https://en.wikipedia.org/wiki/Ballistic_coefficient)
+$F_d = ma$ represents the drag force acting on the projectile. Consolidating factors that are assumed constant during the simulation, we'll parameterize the effect of drag and mass within the derivative function as `k_over_m`,  $\frac{k}{m} = \frac{\rho C_d A}{2m}$.
 
 ## Implementation Details
 
