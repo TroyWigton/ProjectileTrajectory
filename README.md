@@ -33,7 +33,7 @@ The simulation solves the 2D projectile motion equations with quadratic air drag
 
 Below are calculated `k_over_m` values for common objects, assuming standard sea-level air density ($\rho \approx 1.225 \text{ kg/m}^3$).
 
-| Object | Mass ($kg$) | Diameter ($m$) | Drag Coeff ($C_d$) | Area ($m^2$) | `k_over_m` ($1/m$) |
+| Object | Mass (kg) | Diam (m) | Cd | Area (m^2) | k/m (1/m) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Vacuum** (No Drag) | - | - | 0.0 | - | **0.0** |
 | **9mm Bullet** (115gr FMJ) | 0.00745 | 0.009 | 0.295 | $6.36 \times 10^{-5}$ | **0.00154** |
