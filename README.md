@@ -56,7 +56,7 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
 ## Build and Run
 
 ### Requirements
-- C++17 compliant compiler
+- C++14 compliant compiler
 - CMake 3.10+
 
 ### Step-by-Step
@@ -146,26 +146,26 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
 
 ## Help
 
-If CMake is not available, you can compile the individual programs manually using a C++17 compiler.
+If CMake is not available, you can compile the individual programs manually using a C++14 compiler.
 
 **Main Simulation:**
 ```sh
-clang++ -std=c++17 -O3 -I include -o main src/main.cpp src/simulation.cpp src/derivative_functions.cpp
+clang++ -std=c++14 -O3 -I include -o main src/main.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
 **Integrator Comparison:**
 ```sh
-clang++ -std=c++17 -O3 -I include -o compare_integrators src/compare_integrators.cpp src/simulation.cpp src/derivative_functions.cpp
+clang++ -std=c++14 -O3 -I include -o compare_integrators src/compare_integrators.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
 **Unit Tests:**
 ```sh
-clang++ -std=c++17 -O3 -I include -o test src/test.cpp src/simulation.cpp src/derivative_functions.cpp
+clang++ -std=c++14 -O3 -I include -o test src/test.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
 **Drag Coefficient Analysis:**
 ```sh
-clang++ -std=c++17 -O3 -I include -o compare_k_over_m src/compare_k_over_m.cpp src/simulation.cpp src/derivative_functions.cpp
+clang++ -std=c++14 -O3 -I include -o compare_k_over_m src/compare_k_over_m.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
 ## Authors
