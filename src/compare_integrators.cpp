@@ -16,8 +16,8 @@ int main() {
     const double g = 9.81;
     const double v0 = 100;
     const double h0 = 0.0;
-    const double distance_tolerance = 0.01;
-    const double k_over_m = 0.0057; // Golf Ball approximation
+    const double distance_tolerance = 0.0001;
+    const double k_over_m = 0.134; // Ping Pong Ball (High Drag)
 
     std::cout << "Project Comparison Tool\n";
     std::cout << "Drag coefficient k/m = " << k_over_m << "\n";
@@ -34,12 +34,16 @@ int main() {
     std::cout << "Optimal angle used for comparison: " << optimal_angle << " degrees\n";
 
     // 2. Establish Ground Truth using RK8 with very small dt
-    double ground_truth_dt = 1e-4;
+    double ground_truth_dt = 1e-5;
     SystemIntegrator integrator_rk8 = rk8_step<State, SystemDerivative>;
     Simulation sim_ground_truth(k_over_m, integrator_rk8, v0);
     double ground_truth_distance = sim_ground_truth.run(optimal_angle, ground_truth_dt).distance;
     
-    std::cout << "Ground Truth (RK8, dt=" << ground_truth_dt << "): " << ground_truth_distance << " m\n\n";
+    // Automatic precision based on tolerance (e.g. 0.0001 -> 4 decimals + 1 extra)
+    int dist_precision = std::max(0, (int)ceil(-log10(distance_tolerance))) + 1;
+
+    std::cout << "Ground Truth (RK8, dt=" << ground_truth_dt << "): " 
+              << std::fixed << std::setprecision(dist_precision) << ground_truth_distance << " m\n\n";
 
     std::cout << "Comparison: Required Steps & dt to reach " << distance_tolerance << " m precision\n";
     std::cout << "--------------------------------------------------------------------------------\n";
@@ -74,9 +78,9 @@ int main() {
 
         std::cout << std::left << std::setw(15) << name 
                   << std::setw(15) << result.step_count 
-                  << std::setw(15) << result.deltaT 
-                  << std::setw(20) << result.distance 
-                  << current_error << "\n";
+                  << std::setw(15) << std::defaultfloat << std::setprecision(6) << result.deltaT 
+                  << std::setw(20) << std::fixed << std::setprecision(dist_precision) << result.distance 
+                  << std::scientific << std::setprecision(2) << current_error << "\n";
     };
 
     find_steps_for_precision("Euler", euler_step<State, SystemDerivative>);

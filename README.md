@@ -138,20 +138,20 @@ Run the executable `./compare_integrators`
 
 ```
 Project Comparison Tool
-Drag coefficient k/m = 0.0057
-Target precision: 0.01 m
+Drag coefficient k/m = 0.134
+Target precision: 0.0001 m
 
-Optimal angle used for comparison: 34.7358 degrees
-Ground Truth (RK8, dt=0.0001): 246.275 m
+Optimal angle used for comparison: 24.3629 degrees
+Ground Truth (RK8, dt=1e-05): 22.85398 m
 
-Comparison: Required Steps & dt to reach 0.01 m precision
+Comparison: Required Steps & dt to reach 0.00010 m precision
 --------------------------------------------------------------------------------
 Integrator     Steps          dt (s)         Distance (m)        Error (m)
 --------------------------------------------------------------------------------
-Euler          14994          0.000488281    246.269             0.00535052
-Heun           118            0.0625         246.273             0.00161757
-RK4            118            0.0625         246.273             0.00120045
-RK8            118            0.0625         246.273             0.00119595
+Euler          1073219        1.90735e-06    22.85390            8.25e-05
+Heun           4193           0.000488281    22.85401            2.57e-05
+RK4            263            0.0078125      22.85397            1.20e-05
+RK8            132            0.015625       22.85398            3.39e-06
 ```
 
 ## Help
