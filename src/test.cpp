@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <map>
 #include "../include/constants.hpp"
 #include "../include/types.hpp"
 #include "../include/derivative_functions.hpp"
@@ -75,6 +76,77 @@ int main() {
             } else {
                 std::cout << "FAILED (Optimal Angle: " << optimal_angle << ")\n";
                 all_tests_passed = false;
+            }
+        }
+    }
+
+    std::cout << "\n--------------------------------------------------\n";
+    std::cout << "Starting Test Suite: Integrator Consistency (Non-zero Drag)\n";
+    double k_over_m_drag = 0.0057; 
+    std::cout << "k/m: " << k_over_m_drag << "\n";
+    
+    // We expect RK8 to be the most accurate, valid baseline.
+    // We will compare others against RK8.
+    
+    for (const auto& deriv : derivatives) {
+        if (deriv.name == "No Drag") continue; // Skip no drag for this test
+        
+        std::cout << "\nEvaluating Derivative Function: " << deriv.name << "\n";
+        
+        // Store results to compare
+        struct Result {
+            double angle;
+            double distance;
+        };
+        std::map<std::string, Result> results;
+        
+        // Run for each integrator
+        for (const auto& integ : integrators) {
+             Simulation simulation(k_over_m_drag, integ.func, v0, deriv.func, g, h0);
+             auto distance_func = [&](double angle_deg) {
+                return simulation.run(angle_deg, deltaT).distance;
+            };
+            
+            double optimal_angle = golden_section_search_max(distance_func, 10.0, 80.0, 1e-4);
+            double max_dist = distance_func(optimal_angle);
+            
+            results[integ.name] = {optimal_angle, max_dist};
+            std::cout << "  " << std::setw(10) << integ.name 
+                      << ": Angle = " << optimal_angle 
+                      << ", Distance = " << max_dist << "\n";
+        }
+        
+        // Verification: Compare all against RK8 baseline
+        if (results.find("RK8") != results.end()) {
+            const auto& rk8_result = results["RK8"];
+            
+            // Define tolerances for each method (Angle, Distance)
+            // Euler (1st order) needs looser tolerances than RK4 (4th order)
+            std::map<std::string, std::pair<double, double>> tolerances = {
+                {"Euler", {0.1, 0.5}},    // Coarser approximation
+                {"Heun",  {0.01, 0.1}},   // 2nd order accuracy
+                {"RK4",   {0.001, 0.05}}  // High accuracy
+            };
+
+            for (const auto& entry : results) {
+                const std::string& name = entry.first;
+                if (name == "RK8") continue; // Don't compare with self
+
+                double angle_diff = std::abs(entry.second.angle - rk8_result.angle);
+                double dist_diff = std::abs(entry.second.distance - rk8_result.distance);
+                
+                double angle_tol = tolerances[name].first;
+                double dist_tol = tolerances[name].second;
+
+                if (angle_diff < angle_tol && dist_diff < dist_tol) {
+                    std::cout << "  -> Consistency Check (" << name << " vs RK8): PASSED\n";
+                    std::cout << "     (Diffs - Angle: " << angle_diff << ", Dist: " << dist_diff << ")\n";
+                } else {
+                    std::cout << "  -> Consistency Check (" << name << " vs RK8): FAILED\n";
+                    std::cout << "     (Diffs - Angle: " << angle_diff << ", Dist: " << dist_diff 
+                              << " | Tolerance: " << angle_tol << ", " << dist_tol << ")\n";
+                    all_tests_passed = false;
+                }
             }
         }
     }
