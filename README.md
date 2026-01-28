@@ -79,86 +79,83 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    ./main
    ```
 
+   **Sample Result**:
+   ```
+   Using drag coefficient k/m = 0.0057
+   Target distance precision: 0.01 m
+
+   Phase 1: Finding approximate optimal angle (coarse search):
+   Approximate optimal angle: 34.735268 degrees
+   Maximum distance: 246.274544 m
+
+   Phase 2: Finding angle precision for distance tolerance 0.010000 m:
+
+   Phase 3: Refining optimal angle to required precision:
+
+   === RESULTS ===
+   Optimal launch angle: 34.737258 degrees
+   Maximum distance: 246.274544 m
+   Required angle precision: ±0.3 degrees
+     (to maintain distance within ±0.010000 m)
+
+   Verification at angle tolerance boundaries:
+     Angle: 34.416829° → Distance: 246.264668 m (Δ = 0.009876 m)
+     Angle: 34.737258° → Distance: 246.274544 m (optimal)
+     Angle: 35.057687° → Distance: 246.264531 m (Δ = 0.010013 m)
+   ```
+
 4. **Run Integrator Comparison**:
    To benchmark different numerical methods (Euler, Heun, RK4, RK8) against a high-precision ground truth:
-   ```sh
+   ```
    ./compare_integrators
    ```
    This tool iteratively refines the time step ($\Delta t$) for each integrator until it matches the ground truth distance within a specified tolerance (0.01m), reporting the efficiency (steps required) of each method.
 
+   **Sample Result**:
+   ```
+   Project Comparison Tool
+   Drag coefficient k/m = 0.134
+   Target precision: 0.0001 m
 
+   Optimal angle used for comparison: 24.3629 degrees
+   Ground Truth (RK8, dt=1e-05): 22.85398 m
 
-## Getting Started
+   Comparison: Required Steps & dt to reach 0.00010 m precision
+   --------------------------------------------------------------------------------
+   Integrator     Steps          dt (s)         Distance (m)        Error (m)
+   --------------------------------------------------------------------------------
+   Euler          1073219        1.90735e-06    22.85390            8.25e-05
+   Heun           4193           0.000488281    22.85401            2.57e-05
+   RK4            263            0.0078125      22.85397            1.20e-05
+   RK8            132            0.015625       22.85398            3.39e-06
+   ```
 
-### Dependencies
-
-* c++ standard version 14 compiler
-
-### Building
-
-A solution project can be built and run using the included CMakeLists.txt by executing the following commands (after installing cmake).  
-```
-mkdir build && cd build
-cmake ..
-cmake --build .
-```
-
-### Executing program
-
-Run the executable `./main`
-
-### Sample Result
-
-```
-Using drag coefficient k/m = 0.0057
-Target distance precision: 0.01 m
-
-Phase 1: Finding approximate optimal angle (coarse search):
-Approximate optimal angle: 34.735268 degrees
-Maximum distance: 246.274544 m
-
-Phase 2: Finding angle precision for distance tolerance 0.010000 m:
-
-Phase 3: Refining optimal angle to required precision:
-
-=== RESULTS ===
-Optimal launch angle: 34.737258 degrees
-Maximum distance: 246.274544 m
-Required angle precision: ±0.3 degrees
-  (to maintain distance within ±0.010000 m)
-
-Verification at angle tolerance boundaries:
-  Angle: 34.416829° → Distance: 246.264668 m (Δ = 0.009876 m)
-  Angle: 34.737258° → Distance: 246.274544 m (optimal)
-  Angle: 35.057687° → Distance: 246.264531 m (Δ = 0.010013 m)
-```
-Run the executable `./compare_integrators`
-
-### Sample Result 
-
-```
-Project Comparison Tool
-Drag coefficient k/m = 0.134
-Target precision: 0.0001 m
-
-Optimal angle used for comparison: 24.3629 degrees
-Ground Truth (RK8, dt=1e-05): 22.85398 m
-
-Comparison: Required Steps & dt to reach 0.00010 m precision
---------------------------------------------------------------------------------
-Integrator     Steps          dt (s)         Distance (m)        Error (m)
---------------------------------------------------------------------------------
-Euler          1073219        1.90735e-06    22.85390            8.25e-05
-Heun           4193           0.000488281    22.85401            2.57e-05
-RK4            263            0.0078125      22.85397            1.20e-05
-RK8            132            0.015625       22.85398            3.39e-06
-```
+5. **Run Unit Tests**:
+   Executes a suite of validation tests to ensure physics engine accuracy.
+   - **Vacuum Test**: Verifies $\theta_{opt} \approx 45^\circ$ for all integrators when drag is zero.
+   - **Consistency Test**: Cross-references lower-order integrators (Euler, Heun) against the high-precision RK8 method to ensure results are within expected convergence limits under drag conditions.
+   ```sh
+   ./test
+   ```
 
 ## Help
 
-Should cmake not be available on the build machine. Compiling by command line on a mac is performed as follows.
+If CMake is not available, you can compile the individual programs manually using a C++17 compiler.
 
-`clang++ -std=c++14 -O3 -o main src/*.cpp -I include`
+**Main Simulation:**
+```sh
+clang++ -std=c++17 -O3 -I include -o main src/main.cpp src/simulation.cpp src/derivative_functions.cpp
+```
+
+**Integrator Comparison:**
+```sh
+clang++ -std=c++17 -O3 -I include -o compare_integrators src/compare_integrators.cpp src/simulation.cpp src/derivative_functions.cpp
+```
+
+**Unit Tests:**
+```sh
+clang++ -std=c++17 -O3 -I include -o test src/test.cpp src/simulation.cpp src/derivative_functions.cpp
+```
 
 ## Authors
 
