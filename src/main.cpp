@@ -32,6 +32,7 @@ int main() {
     // to allow implicit conversion in Simulation constructor
     SystemIntegrator integrator = rk4_step<State, SystemDerivative>;
 
+    // Use default drag_deriv_v_squared
     Simulation simulation(k_over_m, integrator, v0);
 
     auto distance_func = [&](double angle_deg) {

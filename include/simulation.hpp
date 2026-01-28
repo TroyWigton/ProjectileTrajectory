@@ -19,7 +19,7 @@ public:
     Simulation(double k_over_m,
                SystemIntegrator integrator,
                double v0 = 100.0,
-               DerivativeFuncPtr derivative = drag_deriv,
+               DerivativeFuncPtr derivative = drag_deriv_v_squared,
                double g = 9.81,
                double h0 = 0.0);
 

@@ -2,7 +2,7 @@
 #include "../include/types.hpp"
 #include "math.h"
 
-void drag_deriv(const State& s, double t, State& deriv, double g, double k_over_m) {
+void drag_deriv_v_squared(const State& s, double t, State& deriv, double g, double k_over_m) {
     const double v = sqrt(s[X_VEL]*s[X_VEL] + s[Y_VEL]*s[Y_VEL]);
     deriv[X_POS] = s[X_VEL];  // dx/dt = vx
     deriv[Y_POS] = s[Y_VEL];  // dy/dt = vy
