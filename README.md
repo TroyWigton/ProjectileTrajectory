@@ -61,10 +61,17 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    make
    ```
 
-3. **Run**:
+3. **Run Main Simulation**:
    ```sh
    ./main
    ```
+
+4. **Run Integrator Comparison**:
+   To benchmark different numerical methods (Euler, Heun, RK4, RK8) against a high-precision ground truth:
+   ```sh
+   ./compare_integrators
+   ```
+   This tool iteratively refines the time step ($\Delta t$) for each integrator until it matches the ground truth distance within a specified tolerance (0.01m), reporting the efficiency (steps required) of each method.
 
 
 
@@ -111,6 +118,26 @@ Verification at angle tolerance boundaries:
   Angle: 37.149193° → Distance: 397.930246 m (Δ = 0.098756 m)
   Angle: 37.912268° → Distance: 398.029002 m (optimal)
   Angle: 38.675343° → Distance: 397.928587 m (Δ = 0.100415 m)
+```
+Run the executable `./compare_integrators`
+
+### Sample Result 
+
+```
+Drag coefficient k/m = 0.0025
+Target precision: 0.01 m
+
+Optimal angle used for comparison: 37.9073 degrees
+Ground Truth (RK8, dt=0.0001): 398.029 m
+
+Comparison: Required Steps & dt to reach 0.01 m precision
+--------------------------------------------------------------------------------
+Integrator     Steps          dt (s)         Distance (m)        Error (m)
+--------------------------------------------------------------------------------
+Euler          9581           0.000976562    398.035             0.00630624
+Heun           150            0.0625         398.02              0.00895255
+RK4            75             0.125          398.023             0.00625146
+RK8            75             0.125          398.023             0.0062431
 ```
 
 ## Help

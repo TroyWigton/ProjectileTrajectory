@@ -10,6 +10,7 @@ struct ScenarioResult {
     double height;
     double deltaT;
     double distance;
+    long long step_count;
 };
 
 class Simulation {

@@ -5,20 +5,14 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
-set(EXECUTABLE_NAME main)
-
-file(GLOB SOURCES "src/*.cpp")  # Adjust path/pattern as needed
-
-# Capture both .hpp and .h headers (in include/ and src/ here)
-file(GLOB HEADERS
-    "include/*.hpp"
-    "include/*.h"
-    "src/*.hpp"
-    "src/*.h"
+set(COMMON_SOURCES
+    src/derivative_functions.cpp
+    src/simulation.cpp
 )
 
-# Create the executable
-add_executable(${EXECUTABLE_NAME} ${SOURCES} ${HEADERS})
+add_executable(main src/main.cpp ${COMMON_SOURCES})
+add_executable(compare_integrators src/compare_integrators.cpp ${COMMON_SOURCES})
 
-# Include directories (if you have headers in other locations)
-target_include_directories(${EXECUTABLE_NAME} PRIVATE include/)  # Adjust as needed
+# Include directories
+target_include_directories(main PRIVATE include)
+target_include_directories(compare_integrators PRIVATE include)

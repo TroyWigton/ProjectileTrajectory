@@ -36,12 +36,14 @@ ScenarioResult Simulation::run(double angle_deg, double dt) const {
     double t = 0.0;
     double last_x = 0.0;
     double last_y = m_h0;
+    long long steps = 0;
 
     while (state[Y_POS] >= 0.0) {
         last_x = state[X_POS];
         last_y = state[Y_POS];
         state = m_stepper(state, t, dt);
         t += dt;
+        steps++;
     }
 
     const double denominator = state[Y_POS] - last_y;
@@ -49,5 +51,5 @@ ScenarioResult Simulation::run(double angle_deg, double dt) const {
                                 ? last_x + (-last_y) * (state[X_POS] - last_x) / denominator
                                 : state[X_POS];
 
-    return {angle_deg, m_v0, m_h0, dt, impact_x};
+    return {angle_deg, m_v0, m_h0, dt, impact_x, steps};
 }
