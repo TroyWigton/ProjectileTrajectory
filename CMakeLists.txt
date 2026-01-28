@@ -12,7 +12,9 @@ set(COMMON_SOURCES
 
 add_executable(main src/main.cpp ${COMMON_SOURCES})
 add_executable(compare_integrators src/compare_integrators.cpp ${COMMON_SOURCES})
+add_executable(test src/test.cpp ${COMMON_SOURCES})
 
 # Include directories
 target_include_directories(main PRIVATE include)
 target_include_directories(compare_integrators PRIVATE include)
+target_include_directories(test PRIVATE include)

@@ -28,8 +28,8 @@ int main() {
     // Ping Pong Ball: 0.134
     
     double k_over_m = 0.0057; // Default to Golf Ball
-    
-    // k_over_m = 0.0;   // No Drag scenario (validation testing)
+    //k_over_m = 0.0015; // 9mm Bullet scenario
+    //k_over_m = 0.0;   // No Drag scenario (validation testing)
 
     std::cout << "Using drag coefficient k/m = " << k_over_m << "\n";
     std::cout << "Target distance precision: " << distance_tolerance << " m\n";
