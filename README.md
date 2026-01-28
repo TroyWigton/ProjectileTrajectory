@@ -138,6 +138,12 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    ./test
    ```
 
+6. **Run Drag Coefficient Analysis**:
+   Demonstrates how the optimal launch angle and maximum distance vary with increasing drag ($\frac{k}{m}$ from 0.0 to 0.2).
+   ```sh
+   ./compare_k_over_m
+   ```
+
 ## Help
 
 If CMake is not available, you can compile the individual programs manually using a C++17 compiler.
@@ -155,6 +161,11 @@ clang++ -std=c++17 -O3 -I include -o compare_integrators src/compare_integrators
 **Unit Tests:**
 ```sh
 clang++ -std=c++17 -O3 -I include -o test src/test.cpp src/simulation.cpp src/derivative_functions.cpp
+```
+
+**Drag Coefficient Analysis:**
+```sh
+clang++ -std=c++17 -O3 -I include -o compare_k_over_m src/compare_k_over_m.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
 ## Authors
