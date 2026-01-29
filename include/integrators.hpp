@@ -6,17 +6,15 @@
 
 #include "types.hpp"
 
-template<typename State>
-using IntegratorFunc = State(*)(const State&, double, double, 
-                               std::function<void(const State&, double, State&)>);
+// Specific physics model (forces/derivatives) including physical constants. 
+// Bound into a SystemDerivative within the Simulation class.
+using DerivativeFuncPtr = std::function<void(const State& current_state, double current_time, State& derivative_output, double gravity, double k_over_m)>;
 
-// Standard derivative function signature for the system (no parameters)
-using SystemDerivative = std::function<void(const State&, double, State&)>;
-// Standard integrator signature matching the templated functions instantiation
-using SystemIntegrator = std::function<State(const State&, double, double, SystemDerivative)>;
+// Represents system dynamics (dy/dt = f(t, y)). Calculates the rate of change for the current state.
+using SystemDerivative = std::function<void(const State& current_state, double current_time, State& derivative_output)>;
 
-using DerivativeFuncPtr = void(*)(const State&, double, State&, double, double);
-
+// Numerical integration step function. Advances the state by one time step (dt) given the system dynamics.
+using SystemIntegrator = std::function<State(const State& current_state, double current_time, double time_step, SystemDerivative derivative_func)>;
 
 //Forward Euler (Explicit Euler)
 template<typename State, typename DerivativeFunc>
