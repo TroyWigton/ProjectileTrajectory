@@ -33,7 +33,7 @@
 // Define a struct to hold integrator information
 struct IntegratorInfo {
     std::string name;
-    SystemIntegrator func;
+    SystemIntegrator<State4D> func;
 };
 
 // Define a struct to hold derivative function information
@@ -50,10 +50,10 @@ int main() {
     const double k_over_m = DragRatios::VACUUM;
 
     std::vector<IntegratorInfo> integrators = {
-        {"Euler", euler_step<State, SystemDerivative>},
-        {"Heun", heun_step<State, SystemDerivative>},
-        {"RK4", rk4_step<State, SystemDerivative>},
-        {"RK8", rk8_step<State, SystemDerivative>}
+        {"Euler", euler_step<State4D, SystemDerivative<State4D>>},
+        {"Heun", heun_step<State4D, SystemDerivative<State4D>>},
+        {"RK4", rk4_step<State4D, SystemDerivative<State4D>>},
+        {"RK8", rk8_step<State4D, SystemDerivative<State4D>>}
     };
 
     std::vector<DerivativeInfo> derivatives = {
@@ -185,7 +185,7 @@ int main() {
     
     // Simulation
     // Use RK4 and no_drag_deriv
-    SystemIntegrator integ_rk4 = rk4_step<State, SystemDerivative>;
+    SystemIntegrator<State4D> integ_rk4 = rk4_step<State4D, SystemDerivative<State4D>>;
     // k_over_m = 0.0 for vacuum
     Simulation simulation_h(0.0, integ_rk4, v0, no_drag_deriv, g, h0_test);
     

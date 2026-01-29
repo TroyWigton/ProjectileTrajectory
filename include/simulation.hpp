@@ -17,7 +17,7 @@ struct ScenarioResult {
 class Simulation {
 public:
     Simulation(double k_over_m,
-               SystemIntegrator integrator,
+               SystemIntegrator<State4D> integrator,
                double v0 = 100.0,
                DerivativeFuncPtr derivative = drag_deriv_v_squared,
                double g = 9.81,
@@ -38,7 +38,7 @@ private:
     
     // Abstracted stepper function that knows how to advance the system
     // (Integrator + Derivative + Parameters all bound)
-    const std::function<State(const State&, double, double)> stepper_;
+    const std::function<State4D(const State4D&, double, double)> stepper_;
 };
 
 #endif // SIMULATION_HPP

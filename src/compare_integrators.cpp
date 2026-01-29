@@ -35,7 +35,7 @@ int main() {
     std::cout << "Target precision: " << distance_tolerance << " m\n\n";
 
     // 1. Find optimal angle first (using RK4 as baseline)
-    SystemIntegrator baseline_integrator = rk4_step<State, SystemDerivative>;
+    SystemIntegrator<State4D> baseline_integrator = rk4_step<State4D, SystemDerivative<State4D>>;
     Simulation baseline_sim(k_over_m, baseline_integrator, v0);
     auto distance_func = [&](double angle_deg) {
         return baseline_sim.run(angle_deg, 0.001).distance;
@@ -46,7 +46,7 @@ int main() {
 
     // 2. Establish Ground Truth using RK8 with very small dt
     double ground_truth_dt = 1e-5;
-    SystemIntegrator integrator_rk8 = rk8_step<State, SystemDerivative>;
+    SystemIntegrator<State4D> integrator_rk8 = rk8_step<State4D, SystemDerivative<State4D>>;
     Simulation sim_ground_truth(k_over_m, integrator_rk8, v0);
     double ground_truth_distance = sim_ground_truth.run(optimal_angle, ground_truth_dt).distance;
     
@@ -65,7 +65,7 @@ int main() {
               << "Error (m)\n";
     std::cout << "--------------------------------------------------------------------------------\n";
     
-    auto find_steps_for_precision = [&](std::string name, SystemIntegrator integ) {
+    auto find_steps_for_precision = [&](std::string name, SystemIntegrator<State4D> integ) {
          double current_dt = 1.0; 
          double current_error = 1.0e9;
          ScenarioResult result;
@@ -94,10 +94,10 @@ int main() {
                   << std::scientific << std::setprecision(2) << current_error << "\n";
     };
 
-    find_steps_for_precision("Euler", euler_step<State, SystemDerivative>);
-    find_steps_for_precision("Heun", heun_step<State, SystemDerivative>);
-    find_steps_for_precision("RK4", rk4_step<State, SystemDerivative>);
-    find_steps_for_precision("RK8", rk8_step<State, SystemDerivative>);
+    find_steps_for_precision("Euler", euler_step<State4D, SystemDerivative<State4D>>);
+    find_steps_for_precision("Heun", heun_step<State4D, SystemDerivative<State4D>>);
+    find_steps_for_precision("RK4", rk4_step<State4D, SystemDerivative<State4D>>);
+    find_steps_for_precision("RK8", rk8_step<State4D, SystemDerivative<State4D>>);
 
     return 0;
 }

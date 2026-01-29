@@ -15,6 +15,7 @@ add_executable(compare_integrators src/compare_integrators.cpp ${COMMON_SOURCES}
 add_executable(test src/test.cpp ${COMMON_SOURCES})
 add_executable(compare_k_over_m src/compare_k_over_m.cpp ${COMMON_SOURCES})
 add_executable(test_variable_drag src/test_variable_drag.cpp ${COMMON_SOURCES})
+add_executable(example_3d_motion src/example_3d_motion.cpp)
 
 # Include directories
 target_include_directories(main PRIVATE include)
@@ -22,3 +23,4 @@ target_include_directories(compare_integrators PRIVATE include)
 target_include_directories(test PRIVATE include)
 target_include_directories(compare_k_over_m PRIVATE include)
 target_include_directories(test_variable_drag PRIVATE include)
+target_include_directories(example_3d_motion PRIVATE include)

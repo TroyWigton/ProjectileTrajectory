@@ -16,7 +16,7 @@
 #include <cmath>
 
 Simulation::Simulation(double k_over_m,
-                       SystemIntegrator integrator,
+                       SystemIntegrator<State4D> integrator,
                        double v0,
                        DerivativeFuncPtr derivative,
                        double g,
@@ -25,9 +25,9 @@ Simulation::Simulation(double k_over_m,
       k_over_m_(k_over_m),
       v0_(v0),
       h0_(h0),
-      stepper_([integrator, derivative, g, k_over_m](const State& s, double t, double dt) -> State {
+      stepper_([integrator, derivative, g, k_over_m](const State4D& s, double t, double dt) -> State4D {
         // Lambda to match SystemDerivative signature
-        auto bound_deriv = [derivative, g, k_over_m](const State& state, double time, State& out_d) {
+        auto bound_deriv = [derivative, g, k_over_m](const State4D& state, double time, State4D& out_d) {
              derivative(state, time, out_d, g, k_over_m); 
         };
         return integrator(s, t, dt, bound_deriv);
@@ -35,8 +35,9 @@ Simulation::Simulation(double k_over_m,
 }
 
 ScenarioResult Simulation::run(double angle_deg, double dt) const {
+    using namespace StateIndex4D;
     const double angle_rad = angle_deg * M_PI / 180.0;
-    State state = {0.0, h0_, v0_ * std::cos(angle_rad), v0_ * std::sin(angle_rad)};
+    State4D state = {0.0, h0_, v0_ * std::cos(angle_rad), v0_ * std::sin(angle_rad)};
     double t = 0.0;
     double last_x = 0.0;
     double last_y = h0_;

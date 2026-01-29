@@ -25,7 +25,7 @@ int main() {
     const double v0 = 100.0;
     
     // Setup integrator (RK4 is a good balance)
-    SystemIntegrator integrator = rk4_step<State, SystemDerivative>;
+    SystemIntegrator<State4D> integrator = rk4_step<State4D, SystemDerivative<State4D>>;
 
     std::cout << "K/M Variation Analysis\n";
     std::cout << "--------------------------------------------------------\n";

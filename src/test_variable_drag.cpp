@@ -36,7 +36,7 @@ int main() {
     std::cout << "--------------------------------------------------------\n\n";
 
     // Setup Integrator (RK4)
-    SystemIntegrator integrator = rk4_step<State, SystemDerivative>;
+    SystemIntegrator<State4D> integrator = rk4_step<State4D, SystemDerivative<State4D>>;
 
     // 0. Vacuum Model (No Drag)
     // Pass 0.0 for drag coefficient, though no_drag_deriv ignores it anyway
