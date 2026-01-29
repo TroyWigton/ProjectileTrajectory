@@ -150,7 +150,7 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    Target Angle: 45 degrees
    Tolerance: 0.05 degrees
    k/m: 0
-   
+
    Testing Integrator: Euler, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9998)
    Testing Integrator: Euler, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9998)
    Testing Integrator: Euler, Derivative: No Drag... PASSED (Optimal Angle: 44.9998)
@@ -163,35 +163,47 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    Testing Integrator: RK8, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9999)
    Testing Integrator: RK8, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9999)
    Testing Integrator: RK8, Derivative: No Drag... PASSED (Optimal Angle: 44.9999)
-   
+
    --------------------------------------------------
    Starting Test Suite: Integrator Consistency (Non-zero Drag)
    k/m: 0.0057
-   
+
    Evaluating Derivative Function: V Squared Drag
-          Euler: Angle = 34.7324, Distance = 246.264
-           Heun: Angle = 34.7358, Distance = 246.275
-            RK4: Angle = 34.7358, Distance = 246.275
-            RK8: Angle = 34.7358, Distance = 246.275
-     -> Consistency Check (Euler vs RK8): PASSED
-        (Diffs - Angle: 0.00343658, Dist: 0.0109617)
-     -> Consistency Check (Heun vs RK8): PASSED
-        (Diffs - Angle: 0, Dist: 3.66264e-08)
-     -> Consistency Check (RK4 vs RK8): PASSED
-        (Diffs - Angle: 0, Dist: 9.37916e-13)
-   
+         Euler: Angle = 34.7324, Distance = 246.264
+         Heun: Angle = 34.7358, Distance = 246.275
+         RK4: Angle = 34.7358, Distance = 246.275
+         RK8: Angle = 34.7358, Distance = 246.275
+   -> Consistency Check (Euler vs RK8): PASSED
+      (Diffs - Angle: 0.00343658, Dist: 0.0109617)
+   -> Consistency Check (Heun vs RK8): PASSED
+      (Diffs - Angle: 0, Dist: 3.66264e-08)
+   -> Consistency Check (RK4 vs RK8): PASSED
+      (Diffs - Angle: 0, Dist: 9.37916e-13)
+
    Evaluating Derivative Function: Linear Drag
-          Euler: Angle = 44.2345, Distance = 966.492
-           Heun: Angle = 44.2359, Distance = 966.425
-            RK4: Angle = 44.2359, Distance = 966.425
-            RK8: Angle = 44.2359, Distance = 966.425
-     -> Consistency Check (Euler vs RK8): PASSED
-        (Diffs - Angle: 0.00141116, Dist: 0.0670337)
-     -> Consistency Check (Heun vs RK8): PASSED
-        (Diffs - Angle: 0, Dist: 1.27375e-07)
-     -> Consistency Check (RK4 vs RK8): PASSED
-        (Diffs - Angle: 0, Dist: 1.80762e-11)
-   
+         Euler: Angle = 44.2345, Distance = 966.492
+         Heun: Angle = 44.2359, Distance = 966.425
+         RK4: Angle = 44.2359, Distance = 966.425
+         RK8: Angle = 44.2359, Distance = 966.425
+   -> Consistency Check (Euler vs RK8): PASSED
+      (Diffs - Angle: 0.00141116, Dist: 0.0670337)
+   -> Consistency Check (Heun vs RK8): PASSED
+      (Diffs - Angle: 0, Dist: 1.27375e-07)
+   -> Consistency Check (RK4 vs RK8): PASSED
+      (Diffs - Angle: 0, Dist: 1.80762e-11)
+
+   --------------------------------------------------
+   Starting Test Suite: Vacuum Trajectory with Height (No Drag)
+   Launch Height h0: 100 m
+   Initial Velocity v0: 100 m/s
+   Gravity g: 9.81 m/s^2
+   Theoretical Optimal Angle: 42.4373 degrees
+   Experimental Optimal Angle: 42.4377 degrees
+   PASSED (Difference: 0.000363027)
+   Theoretical Max Distance: 1114.89 m
+   Experimental Max Distance: 1114.89 m
+   Distance Check: PASSED (Difference: 1.02653e-06)
+
    All tests passed successfully!
    ```
 
