@@ -16,7 +16,7 @@
 #include <array>
 #include <iostream>
 #include <iomanip>
-#include "math.h"
+#include <cmath>
 #include <functional>
 #include <string>
 #include "../include/constants.hpp"
@@ -29,7 +29,7 @@
 #include "../include/simulation.hpp"
 
 int main() {
-    const double g = 9.81;
+    const double g = GRAVITY_EARTH;
     const double deltaT = 0.001;
     const double v0 = 100;
     const double h0 = 0.0;
@@ -41,9 +41,9 @@ int main() {
     // Golf Ball: 0.0057
     // Ping Pong Ball: 0.134
     
-    double k_over_m = 0.0057; // Default to Golf Ball
-    //k_over_m = 0.0015; // 9mm Bullet scenario
-    //k_over_m = 0.0;   // No Drag scenario (validation testing)
+    double k_over_m = DragCoeff::GOLF_BALL; 
+    //k_over_m = DragCoeff::BULLET_9MM; 
+    //k_over_m = DragCoeff::VACUUM;
 
     std::cout << "Using drag coefficient k/m = " << k_over_m << "\n";
     std::cout << "Target distance precision: " << distance_tolerance << " m\n";

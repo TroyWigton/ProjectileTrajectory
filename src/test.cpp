@@ -43,11 +43,11 @@ struct DerivativeInfo {
 };
 
 int main() {
-    const double g = 9.81;
+    const double g = GRAVITY_EARTH;
     const double deltaT = 0.001;
     const double v0 = 100.0;
     const double h0 = 0.0;
-    const double k_over_m = 0.0; // Vacuum
+    const double k_over_m = DragCoeff::VACUUM;
 
     std::vector<IntegratorInfo> integrators = {
         {"Euler", euler_step<State, SystemDerivative>},

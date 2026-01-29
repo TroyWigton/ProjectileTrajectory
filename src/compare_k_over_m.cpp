@@ -20,7 +20,7 @@
 #include "../include/simulation.hpp"
 
 int main() {
-    const double g = 9.81;
+    const double g = GRAVITY_EARTH;
     const double deltaT = 0.001;
     const double v0 = 100.0;
     

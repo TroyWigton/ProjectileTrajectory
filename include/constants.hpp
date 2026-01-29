@@ -5,8 +5,15 @@
 #define M_PI 3.14159265358979323846264338327950288
 #endif
 
-// Could add physics constants here later:
-// constexpr double G_EARTH = 9.81;  // m/s²
-// constexpr double K_GOLF_BALL = 0.0025;  // drag coefficient
+// Physical constants
+constexpr double GRAVITY_EARTH = 9.81;  // m/s²
+
+// Drag coefficients (k/m) references
+namespace DragCoeff {
+    constexpr double VACUUM = 0.0;
+    constexpr double BULLET_9MM = 0.0015;
+    constexpr double GOLF_BALL = 0.0057;
+    constexpr double PING_PONG_BALL = 0.134;
+}
 
 #endif // CONSTANTS_HPP

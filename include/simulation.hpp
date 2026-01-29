@@ -25,20 +25,20 @@ public:
 
     ScenarioResult run(double angle_deg, double dt) const;
 
-    double gravity() const { return m_g; }
-    double drag_ratio() const { return m_k_over_m; }
-    double initial_velocity() const { return m_v0; }
-    double initial_height() const { return m_h0; }
+    double gravity() const { return g_; }
+    double drag_ratio() const { return k_over_m_; }
+    double initial_velocity() const { return v0_; }
+    double initial_height() const { return h0_; }
 
 private:
-    double m_g;
-    double m_k_over_m;
-    double m_v0;
-    double m_h0;
+    double g_;
+    double k_over_m_;
+    double v0_;
+    double h0_;
     
     // Abstracted stepper function that knows how to advance the system
     // (Integrator + Derivative + Parameters all bound)
-    std::function<State(const State&, double, double)> m_stepper;
+    std::function<State(const State&, double, double)> stepper_;
 };
 
 #endif // SIMULATION_HPP
