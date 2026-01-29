@@ -48,7 +48,7 @@ int main() {
 
     // 2. Constant Drag (Baseline using Cd_final / Turbulent)
     // k/m = F * Cd_final
-    double km_std = GolfBallPhysics::FACTOR_F * GolfBallPhysics::CD_LAMINAR;
+    double km_std = GolfBallPhysics::FACTOR_F * (GolfBallPhysics::CD_LAMINAR+GolfBallPhysics::CD_TURBULENT)/2.0;
     run_optimization_case("2. Const Low Drag", v0, km_std, drag_deriv_v_squared);
 
     // 3. New Golf Ball Model (Variable Drag)
