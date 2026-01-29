@@ -1,18 +1,42 @@
+/**
+ * @file integrators.hpp
+ * @brief Numerical integration methods for solving ODEs.
+ */
+
 #ifndef INTEGRATORS_HPP
 #define INTEGRATORS_HPP
 
 #include <array>
 #include <functional>
 
-// Represents system dynamics (dy/dt = f(t, y)). Calculates the rate of change for the current state.
+/**
+ * @brief Function signature for the system dynamics (dy/dt = f(t, y)).
+ * Calculates the rate of change for the current state.
+ */
 template <typename State>
 using SystemDerivative = std::function<void(const State& current_state, double current_time, State& derivative_output)>;
 
-// Numerical integration step function. Advances the state by one time step (dt) given the system dynamics.
+/**
+ * @brief Function signature for a numerical integration step.
+ * Advances the state by one time step (dt) given the system dynamics.
+ */
 template <typename State>
 using SystemIntegrator = std::function<State(const State& current_state, double current_time, double time_step, SystemDerivative<State> derivative_func)>;
 
-//Forward Euler (Explicit Euler)
+/**
+ * @brief Forward Euler (Explicit Euler) Method.
+ * 
+ * First-order numerical procedure for solving ODEs with a given initial value.
+ * \f$ y_{n+1} = y_n + h * f(t_n, y_n) \f$
+ * 
+ * @tparam State The type of the state vector (e.g., std::array or std::vector).
+ * @tparam DerivativeFunc The type of the derivative function.
+ * @param state Current state vector.
+ * @param t Current time.
+ * @param dt Time step size.
+ * @param deriv_func Function that computes derivatives.
+ * @return The estimated state at time t + dt.
+ */
 template<typename State, typename DerivativeFunc>
 State euler_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
     State deriv;
@@ -26,7 +50,19 @@ State euler_step(const State& state, double t, double dt, DerivativeFunc deriv_f
 }
 
 
-//Heun's Method (Trapezoidal Rule)
+/**
+ * @brief Heun's Method (Improved Euler / Trapezoidal Rule).
+ * 
+ * Second-order numerical method.
+ * Predictor: \f$ \tilde{y}_{n+1} = y_n + h * f(t_n, y_n) \f$
+ * Corrector: \f$ y_{n+1} = y_n + (h/2) * (f(t_n, y_n) + f(t_{n+1}, \tilde{y}_{n+1})) \f$
+ * 
+ * @param state Current state vector.
+ * @param t Current time.
+ * @param dt Time step size.
+ * @param deriv_func Function that computes derivatives.
+ * @return The estimated state at time t + dt.
+ */
 template<typename State, typename DerivativeFunc>
 State heun_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
     State k1, k2, temp;
@@ -45,7 +81,17 @@ State heun_step(const State& state, double t, double dt, DerivativeFunc deriv_fu
 }
 
 
-//Fourth Order Runge-Kutta
+/**
+ * @brief Fourth-Order Runge-Kutta Method (RK4).
+ * 
+ * Widely used fourth-order method.
+ * 
+ * @param state Current state vector.
+ * @param t Current time.
+ * @param dt Time step size.
+ * @param deriv_func Function that computes derivatives.
+ * @return The estimated state at time t + dt.
+ */
 template<typename State, typename DerivativeFunc>
 State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
     State k1, k2, k3, k4, temp;
@@ -71,7 +117,17 @@ State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
     return next_state;
 }
 
-// 8th Order Runge-Kutta
+/**
+ * @brief Eighth-Order Runge-Kutta Method (RK8).
+ * 
+ * Uses Dormand-Prince 8(7) coefficients (fixed step size usage here).
+ * 
+ * @param state Current state vector.
+ * @param t Current time.
+ * @param dt Time step size.
+ * @param deriv_func Function that computes derivatives.
+ * @return The estimated state at time t + dt.
+ */
 template<typename State, typename DerivativeFunc>
 State rk8_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
     // Dormand-Prince 8(7) Butcher tableau coefficients
