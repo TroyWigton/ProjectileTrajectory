@@ -9,6 +9,10 @@ There exists an optimum angle $\theta_{opt}$ when launching a projectile subject
 
 $$\theta_{opt} = \arctan\left(\frac{v_0}{\sqrt{2gh + v_0^2}}\right)$$
 
+The corresponding maximum horizontal distance $R_{max}$ achieved at this angle is:
+
+$$R_{max} = \frac{v_0}{g}\sqrt{2gh + v_0^2}$$
+
 Where $v_0$ represents initial velocity, $g$ is the gravitational acceleration constant, and $h$ is the launch height.  Notice a familiar result from elementary physics, with $h = 0$, $\theta_{opt} = 45^\circ$
 
 In the presence of atmospheric drag, the optimal launch angle decreases. We don't have an analytic formula to calculate this result. Therefore we will simulate the atmospheric drag effect on the projectile.  Where drag is proportional to instantaneous velocity squared in each time step according to the following formula.
@@ -272,5 +276,6 @@ This project is licensed under the MIT License - see the LICENSE.md file for det
 
 Inspiration, code snippets, etc.
 * [Ballistic_Coefficient](https://en.wikipedia.org/wiki/Ballistic_coefficient)
+* [Projectile Motion](https://en.wikipedia.org/wiki/Projectile_motion)
 * [Markdown Preview](https://markdownlivepreview.com/)
 * [Runge-Kutta Methods](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods)

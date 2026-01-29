@@ -12,6 +12,8 @@
  *    against a high-precision Runge-Kutta 8 (RK8) baseline under drag conditions.
  *    Ensures that less accurate methods drift within expected bounds relative to
  *    simpler methods.
+ * 3. Vacuum Trajectory with initial height: Verifies that the simulated optimal angle matches
+ *    the closed-form theoretical prediction when launching from a non-zero initial height.
  */
 #include <vector>
 #include <iostream>
@@ -164,6 +166,63 @@ int main() {
                 }
             }
         }
+    }
+
+    std::cout << "\n--------------------------------------------------\n";
+    std::cout << "Starting Test Suite: Vacuum Trajectory with Height (No Drag)\n";
+    
+    double h0_test = 100.0; // Launch height
+    std::cout << "Launch Height h0: " << h0_test << " m\n";
+    std::cout << "Initial Velocity v0: " << v0 << " m/s\n";
+    std::cout << "Gravity g: " << g << " m/s^2\n";
+    
+    // Theoretical Calculation
+    // Theta = arctan( v0 / sqrt(v0^2 + 2*g*h0) )
+    double theta_rad = std::atan(v0 / std::sqrt(v0 * v0 + 2 * g * h0_test));
+    double theoretical_angle = theta_rad * 180.0 / M_PI;
+    
+    std::cout << "Theoretical Optimal Angle: " << theoretical_angle << " degrees\n";
+    
+    // Simulation
+    // Use RK4 and no_drag_deriv
+    SystemIntegrator integ_rk4 = rk4_step<State, SystemDerivative>;
+    // k_over_m = 0.0 for vacuum
+    Simulation simulation_h(0.0, integ_rk4, v0, no_drag_deriv, g, h0_test);
+    
+    auto distance_func_h = [&](double angle_deg) {
+        return simulation_h.run(angle_deg, deltaT).distance;
+    };
+    
+    // Search around the theoretical value
+    double search_range = 10.0;
+    double experimental_angle_h = golden_section_search_max(distance_func_h, 
+                                                           theoretical_angle - search_range, 
+                                                           theoretical_angle + search_range, 
+                                                           1e-4);
+    
+    std::cout << "Experimental Optimal Angle: " << experimental_angle_h << " degrees\n";
+    
+    if (std::abs(experimental_angle_h - theoretical_angle) < tolerance) {
+        std::cout << "PASSED (Difference: " << std::abs(experimental_angle_h - theoretical_angle) << ")\n";
+    } else {
+        std::cout << "FAILED (Difference: " << std::abs(experimental_angle_h - theoretical_angle) << ")\n";
+        all_tests_passed = false;
+    }
+
+    // Distance Verification
+    // R_max = (v0 / g) * sqrt(v0^2 + 2*g*h0)
+    double theoretical_max_dist = (v0 / g) * std::sqrt(v0 * v0 + 2 * g * h0_test);
+    double experimental_max_dist = distance_func_h(experimental_angle_h);
+    double dist_tolerance = 0.05; // 5cm tolerance
+
+    std::cout << "Theoretical Max Distance: " << theoretical_max_dist << " m\n";
+    std::cout << "Experimental Max Distance: " << experimental_max_dist << " m\n";
+
+    if (std::abs(experimental_max_dist - theoretical_max_dist) < dist_tolerance) {
+        std::cout << "Distance Check: PASSED (Difference: " << std::abs(experimental_max_dist - theoretical_max_dist) << ")\n";
+    } else {
+        std::cout << "Distance Check: FAILED (Difference: " << std::abs(experimental_max_dist - theoretical_max_dist) << ")\n";
+        all_tests_passed = false;
     }
 
     if (all_tests_passed) {
