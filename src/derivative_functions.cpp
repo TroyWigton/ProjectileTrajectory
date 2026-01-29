@@ -36,3 +36,37 @@ void no_drag_deriv(const State& s, double t, State& deriv, double g, double) {
     deriv[X_VEL] = 0.0;       // dvx/dt = 0
     deriv[Y_VEL] = -g;        // dvy/dt = -g
 }
+
+void variable_drag_deriv(const State& s, double t, State& deriv, double g, double base_k_over_m) {
+    // 1. Calculate current speed from State
+    double v_sq = s[X_VEL]*s[X_VEL] + s[Y_VEL]*s[Y_VEL];
+    double v = std::sqrt(v_sq);
+    double mach = v / 343.0; // Approx speed of sound at sea level
+
+    // 2. Define Physics Logic: Drag Multiplier vs Mach Number
+    // Model: Rise from 1.0x at Mach 0.8 to 2.5x at Mach 1.0 (Transonic)
+    //        Then decay back to 1.0x at Mach 2.0 (Supersonic)
+    double drag_multiplier = 1.0;
+
+    if (mach >= 0.8 && mach < 1.0) {
+        // Linear rise: (mach - 0.8) / 0.2 gives 0..1 fraction
+        drag_multiplier = 1.0 + ((mach - 0.8) / 0.2) * 1.5;
+    } else if (mach >= 1.0 && mach < 2.0) {
+        // Linear decay: (mach - 1.0) / 1.0 gives 0..1 fraction
+        drag_multiplier = 2.5 - ((mach - 1.0) / 1.0) * 1.5;
+    } else if (mach >= 2.0) {
+        // Settled back to base at high mach (per request)
+        // Note: Realistically it might stay higher, but we fade to base here
+        drag_multiplier = 1.0;
+    }
+    
+    double current_k_over_m = base_k_over_m * drag_multiplier;
+
+    // 3. Apply force
+    deriv[X_POS] = s[X_VEL];
+    deriv[Y_POS] = s[Y_VEL];
+    
+    // Apply drag acceleration
+    deriv[X_VEL] = -current_k_over_m * v * s[X_VEL];
+    deriv[Y_VEL] = -g - current_k_over_m * v * s[Y_VEL];
+}

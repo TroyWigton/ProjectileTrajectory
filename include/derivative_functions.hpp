@@ -9,4 +9,6 @@ void drag_deriv_linear(const State& s, double t, State& deriv, double g, double 
 
 void no_drag_deriv(const State& s, double t, State& deriv, double g, double k_over_m = 0.0);
 
+void variable_drag_deriv(const State& s, double t, State& deriv, double g, double base_k_over_m);
+
 #endif // DERIVATIVE_FUNCTIONS_HPP

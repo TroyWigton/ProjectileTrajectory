@@ -24,15 +24,14 @@ Simulation::Simulation(double k_over_m,
     : g_(g),
       k_over_m_(k_over_m),
       v0_(v0),
-      h0_(h0) {
-    // initialize stepper by binding parameters and derivative to the integrator
-    stepper_ = [integrator, derivative, g, k_over_m](const State& s, double t, double dt) -> State {
+      h0_(h0),
+      stepper_([integrator, derivative, g, k_over_m](const State& s, double t, double dt) -> State {
         // Lambda to match SystemDerivative signature
         auto bound_deriv = [derivative, g, k_over_m](const State& state, double time, State& out_d) {
              derivative(state, time, out_d, g, k_over_m); 
         };
         return integrator(s, t, dt, bound_deriv);
-    };
+    }) {
 }
 
 ScenarioResult Simulation::run(double angle_deg, double dt) const {

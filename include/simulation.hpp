@@ -31,14 +31,14 @@ public:
     double initial_height() const { return h0_; }
 
 private:
-    double g_;
-    double k_over_m_;
-    double v0_;
-    double h0_;
+    const double g_;
+    const double k_over_m_;
+    const double v0_;
+    const double h0_;
     
     // Abstracted stepper function that knows how to advance the system
     // (Integrator + Derivative + Parameters all bound)
-    std::function<State(const State&, double, double)> stepper_;
+    const std::function<State(const State&, double, double)> stepper_;
 };
 
 #endif // SIMULATION_HPP
