@@ -78,7 +78,7 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    mkdir build
    cd build
    cmake ..
-   make
+   cmake --build . -j
    ```
 
 3. **Run Main Simulation**:
