@@ -250,6 +250,38 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
       0.20000                 23.42878            16.35945
       ```
 
+7. **Run Variable Drag Test**:
+   Evaluates the impact of Mach-dependent drag (transonic wave drag) on a high-velocity projectile (.223 Remington).
+   It compares a vacuum baseline, a standard constant-drag model, and a variable-drag model where $C_d$ rises significantly near Mach 1.0.
+   ```sh
+   ./test_variable_drag
+   ```
+   **Sample Result**:
+   ```
+   Variable Drag Model Evaluation (.223 Remington)
+   --------------------------------------------------------
+   Initial Velocity: 975 m/s (Mach 2.8426)
+   Base k/m: 0.0012
+   Time step: 0.0010 s
+   --------------------------------------------------------
+
+   Model 0: Vacuum (Theoretical Baseline)
+     Optimal Angle: 44.9999 degrees
+     Max Distance:  96903.67 m
+
+   Model 1: Standard v^2 Drag (Constant Coeff)
+     Optimal Angle: 24.7662 degrees
+     Max Distance:  2481.73 m
+
+   Model 2: Variable Drag (Transonic Rise)
+     Optimal Angle: 26.3674 degrees
+     Max Distance:  2162.62 m
+
+   Impact Analysis:
+     Range Reduction: 319.10 m (12.86% loss)
+     Angle Shift:     1.60 degrees
+   ```
+
 ## Help
 
 If CMake is not available, you can compile the individual programs manually using a C++14 compiler.
@@ -272,6 +304,11 @@ clang++ -std=c++14 -O3 -I include -o test src/test.cpp src/simulation.cpp src/de
 **Drag Coefficient Analysis:**
 ```sh
 clang++ -std=c++14 -O3 -I include -o compare_k_over_m src/compare_k_over_m.cpp src/simulation.cpp src/derivative_functions.cpp
+```
+
+**Variable Drag Analysis:**
+```sh
+clang++ -std=c++14 -O3 -I include -o test_variable_drag src/test_variable_drag.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
 ## Authors

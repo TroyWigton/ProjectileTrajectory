@@ -41,9 +41,9 @@ int main() {
     // Golf Ball: 0.0057
     // Ping Pong Ball: 0.134
     
-    double k_over_m = DragCoeff::GOLF_BALL; 
-    //k_over_m = DragCoeff::BULLET_9MM; 
-    //k_over_m = DragCoeff::VACUUM;
+    double k_over_m = DragRatios::GOLF_BALL; 
+    //k_over_m = DragRatios::BULLET_9MM; 
+    //k_over_m = DragRatios::VACUUM;
 
     std::cout << "Using drag coefficient k/m = " << k_over_m << "\n";
     std::cout << "Target distance precision: " << distance_tolerance << " m\n";

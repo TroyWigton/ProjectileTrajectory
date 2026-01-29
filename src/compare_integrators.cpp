@@ -28,7 +28,7 @@ int main() {
     const double v0 = 100;
     const double h0 = 0.0;
     const double distance_tolerance = 0.0001;
-    const double k_over_m = DragCoeff::PING_PONG_BALL; // Ping Pong Ball (High Drag)
+    const double k_over_m = DragRatios::PING_PONG_BALL; // Ping Pong Ball (High Drag)
 
     std::cout << "Project Comparison Tool\n";
     std::cout << "Drag coefficient k/m = " << k_over_m << "\n";

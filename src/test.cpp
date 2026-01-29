@@ -47,7 +47,7 @@ int main() {
     const double deltaT = 0.001;
     const double v0 = 100.0;
     const double h0 = 0.0;
-    const double k_over_m = DragCoeff::VACUUM;
+    const double k_over_m = DragRatios::VACUUM;
 
     std::vector<IntegratorInfo> integrators = {
         {"Euler", euler_step<State, SystemDerivative>},
