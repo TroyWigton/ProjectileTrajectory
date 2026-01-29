@@ -1,4 +1,30 @@
-// Modified golden-section search for maximization
+/**
+ * @file golden_section.hpp
+ * @brief Optimization algorithm for finding local maxima.
+ */
+
+#ifndef GOLDEN_SECTION_HPP
+#define GOLDEN_SECTION_HPP
+
+#include <cmath>
+#include <iostream>
+#include <functional>
+#include <stdexcept>
+
+/**
+ * @brief Golden-section search for maximization.
+ * 
+ * finds the maximum of a unimodal function `f` within the interval [`a`, `b`].
+ * 
+ * @tparam Func The type of the function to optimize (must return double and take double).
+ * @param f The Objective function to maximize.
+ * @param a The lower bound of the interval.
+ * @param b The upper bound of the interval.
+ * @param tol The tolerance for the stopping criterion (interval width).
+ * @param verbose If true, prints progress to std::cout.
+ * @return The argument `x` that maximizes `f(x)`.
+ * @throws std::invalid_argument If `a >= b` or `tol <= 0`.
+ */
 template<typename Func>
 double golden_section_search_max(Func f, double a, double b, double tol, bool verbose = false) {
     
@@ -9,6 +35,7 @@ double golden_section_search_max(Func f, double a, double b, double tol, bool ve
     if (!(a < b)) {
         throw std::invalid_argument("golden_section_search_max: require a < b");
     }
+
     if (!(tol > 0.0)) {
         throw std::invalid_argument("golden_section_search_max: require tol > 0");
     }
@@ -66,3 +93,5 @@ double golden_section_search_max(Func f, double a, double b, double tol, bool ve
     }
     return optimal;
 }
+
+#endif // GOLDEN_SECTION_HPP
