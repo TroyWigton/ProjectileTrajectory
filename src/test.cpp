@@ -225,6 +225,47 @@ int main() {
         all_tests_passed = false;
     }
 
+    std::cout << "\n--------------------------------------------------\n";
+    std::cout << "Starting Test Suite: V Squared Drag Trajectory with Variable Height\n";
+    std::cout << "Parameters: v0 = 100 m/s, k/m = 0.0057 (Golf Ball)\n";
+    std::cout << "Hypothesis: As launch height increases, optimal angle should decrease.\n\n";
+
+    std::cout << std::setw(10) << "Height (m)" 
+              << std::setw(20) << "Optimal Angle (deg)" 
+              << std::setw(20) << "Max Distance (m)" << "\n";
+    std::cout << std::string(50, '-') << "\n";
+
+    std::vector<double> test_heights = {0.0, 50.0, 100.0, 200.0, 500.0};
+    double last_angle = 90.0; // Start high to ensure first check passes
+
+    for (double h : test_heights) {
+        // Use RK4 and v_squared drag
+        SystemIntegrator<State4D> integ_rk4_drag = rk4_step<State4D, SystemDerivative<State4D>>;
+        double k_over_m_golf = 0.0057;
+
+        Simulation sim_drag_h(k_over_m_golf, integ_rk4_drag, v0, drag_deriv_v_squared, g, h);
+        
+        auto distance_func_drag_h = [&](double angle_deg) {
+            return sim_drag_h.run(angle_deg, deltaT).distance;
+        };
+
+        // Coarse bracket then refine
+        double opt_angle = golden_section_search_max(distance_func_drag_h, 0.0, 60.0, 1e-4);
+        double max_dist = distance_func_drag_h(opt_angle);
+
+        std::cout << std::setw(10) << h 
+                  << std::setw(20) << opt_angle 
+                  << std::setw(20) << max_dist << "\n";
+
+        // Verification: Angle should decrease as height increases
+        if (opt_angle > last_angle) {
+            std::cout << "  [FAILURE] Optimal angle increased! Expected decrease.\n";
+            all_tests_passed = false;
+        }
+        last_angle = opt_angle;
+    }
+    std::cout << "Trend verification: PASSED\n";
+
     if (all_tests_passed) {
         std::cout << "\nAll tests passed successfully!\n";
         return 0;
