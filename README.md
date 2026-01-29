@@ -43,7 +43,7 @@ Below are calculated `k_over_m` values for common objects, assuming standard sea
 | **Golf Ball** | 0.04593 | 0.0427 | 0.30 | $1.43 \times 10^{-3}$ | **0.00573** |
 | **Ping Pong Ball** | 0.0027 | 0.040 | 0.47 | $1.26 \times 10^{-3}$ | **0.13398** |
 
-*Note: These are approximations using constant drag coefficients. Real-world ballistics involve velocity-dependent $C_d$ (Mach number variations), but these values provide good baselines for comparison.*
+**Note:** These are approximations using constant drag coefficients. Real-world ballistics involve velocity-dependent $C_d$ (Mach number and Reynolds number variations), but these values provide sufficient baselines for comparison.
 
 ### Numerical Methods
 - **Integration**: Fourth-order Runge-Kutta (RK4) is used to advance the state vector in discrete time steps ($\Delta t$). This offers a good balance between speed and accuracy compared to Euler or Heun methods.
