@@ -53,6 +53,12 @@ Below are calculated `k_over_m` values for common objects, assuming standard sea
 To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}$, the program treats the simulation as a function $f(\theta) \rightarrow x_{impact}$.
 - **Algorithm**: Golden Section Search.
 - **Why**: This is a robust bracket-reduction method that finds extrema without requiring derivatives of the objective function. It iteratively narrows down the range $[a, b]$ containing the optimal angle until the width is within a specified tolerance.
+- **Process**:
+    1.  **Initialization**: Start with a known bracket $[a,b]$ (e.g., $10^\circ$ to $80^\circ$) that is certain to contain the maxima.
+    2.  **Evaluation**: Evaluate the distance function at two interior points $c$ and $d$ chosen by the golden ratio $\phi = \frac{1+\sqrt{5}}{2}$.
+    3.  **Reduction**: Discard the sub-segment that does not contain the maximum, maintaining the golden ratio property for the next iteration.
+    4.  **Termination**: Repeat until $(b-a)$ is less than the desired angular precision.
+- **Refinement**: To improve efficiency, the program employs a multi-phase approach. It first performs a coarse search to locate the approximate peak, calculates the sensitivity of distance to angle near that peak, and then performs a high-precision refinement focused narrowly on the optimal region.
 
 ## Build and Run
 
@@ -276,5 +282,6 @@ This project is licensed under the MIT License - see the LICENSE.md file for det
 Inspiration, code snippets, etc.
 * [Ballistic_Coefficient](https://en.wikipedia.org/wiki/Ballistic_coefficient)
 * [Projectile Motion](https://en.wikipedia.org/wiki/Projectile_motion)
+* [Golden-section search](https://en.wikipedia.org/wiki/Golden-section_search)
 * [Markdown Preview](https://markdownlivepreview.com/)
 * [Runge-Kutta Methods](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods)
