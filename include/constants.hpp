@@ -17,4 +17,23 @@ namespace DragRatios {
     constexpr double PING_PONG_BALL = 0.134;
 }
 
+namespace GolfBallPhysics {
+    // Physical properties
+    constexpr double MASS_KG = 0.04593;
+    constexpr double DIAMETER_M = 0.04267;
+    constexpr double AIR_DENSITY = 1.225;
+    
+    // Constant Factor F = (rho * A) / (2 * m)
+    // Area = 0.00143 m^2, F = 0.01907
+    constexpr double FACTOR_F = 0.01907; 
+    
+    // Drag Coefficients
+    constexpr double CD_LAMINAR = 0.55;
+    constexpr double CD_TURBULENT = 0.275;
+    
+    // Transition Velocities (m/s)
+    constexpr double V_TRANSITION_START = 18.0;
+    constexpr double V_TRANSITION_END = 25.0;
+}
+
 #endif // CONSTANTS_HPP

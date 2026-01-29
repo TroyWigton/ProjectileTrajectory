@@ -46,13 +46,13 @@ int main() {
     // 1. Vacuum
     run_optimization_case("1. Vacuum", v0, 0.0, no_drag_deriv);
 
-    // 2. Constant Drag (High Drag / Laminar approximation)
-    // k/m for golf ball = 0.0057
-    double km_std = 0.0057;
-    run_optimization_case("2. Constant Drag", v0, km_std, drag_deriv_v_squared);
+    // 2. Constant Drag (Baseline using Cd_final / Turbulent)
+    // k/m = F * Cd_final
+    double km_std = GolfBallPhysics::FACTOR_F * GolfBallPhysics::CD_LAMINAR;
+    run_optimization_case("2. Const Low Drag", v0, km_std, drag_deriv_v_squared);
 
     // 3. New Golf Ball Model (Variable Drag)
-    run_optimization_case("3. Variable Drag", v0, 25.0, golf_ball_drag_deriv); // params: v_critical = 25.0 m/s
+    run_optimization_case("3. Variable Drag", v0, 0.0, golf_ball_drag_deriv); // params ignored, uses constants
 
     return 0;
 }

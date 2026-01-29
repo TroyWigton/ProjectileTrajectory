@@ -13,6 +13,7 @@
  */
 #include "../include/derivative_functions.hpp"
 #include "../include/types.hpp"
+#include "../include/constants.hpp"
 #include <cmath>
 
 void drag_deriv_v_squared(const State4D& s, double t, State4D& deriv, double g, double k_over_m) {
@@ -78,29 +79,18 @@ void variable_drag_deriv(const State4D& s, double t, State4D& deriv, double g, d
 void golf_ball_drag_deriv(const State4D& s, double t, State4D& deriv, double g, double v_critical) {
     using namespace StateIndex4D;
 
-    // Constants for Standard Golf Ball
-    // Mass = 0.04593 kg
-    // Diameter = 0.04267 m
-    // Area = pi * (D/2)^2 = 0.00143 m^2
-    // Air Density (sea level) = 1.225 kg/m^3
-    
-    // Constant Factor F = (rho * A) / (2 * m)
-    // F = (1.225 * 0.00143) / (2 * 0.04593) = 0.01907
-    const double F = 0.01907;
-
     // 1. Calculate Velocity
     double v_sq = s[X_VEL]*s[X_VEL] + s[Y_VEL]*s[Y_VEL];
     double v = std::sqrt(v_sq);
 
     // 2. Determine Cd based on Velocity
-    // "Drop" occurs between 18.0 and 25.0 m/s
     double Cd;
-    double v_start = 18.0;
-    double v_end = 25.0;
-
-    // Linear drop from 0.55 to 0.275
-    double Cd_initial = 0.55;
-    double Cd_final = 0.275;
+    
+    // Use Shared Constants
+    const double v_start = GolfBallPhysics::V_TRANSITION_START;
+    const double v_end = GolfBallPhysics::V_TRANSITION_END;
+    const double Cd_initial = GolfBallPhysics::CD_LAMINAR;
+    const double Cd_final = GolfBallPhysics::CD_TURBULENT;
 
     if (v < v_start) {
         Cd = Cd_initial;
@@ -114,7 +104,7 @@ void golf_ball_drag_deriv(const State4D& s, double t, State4D& deriv, double g, 
     }
 
     // 3. Calculate dynamic k/m
-    double current_k_over_m = F * Cd;
+    double current_k_over_m = GolfBallPhysics::FACTOR_F * Cd;
 
     // 4. Apply derivatives
     deriv[X_POS] = s[X_VEL];
