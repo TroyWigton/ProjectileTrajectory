@@ -30,8 +30,7 @@ The simulation solves the 2D projectile motion equations with quadratic air drag
   - $\dot{x} = v_x$
   - $\dot{y} = v_y$
   - $\dot{v_x} = -\frac{k}{m} v v_x$
-  - $\dot{v_y} = -g - \frac{k}{m} v v_y$
-  where $v = \sqrt{v_x^2 + v_y^2}$ and $\frac{k}{m}$ is the drag factor derived from $\frac{1}{2m} \rho C_d A$.
+  - $\dot{v_y} = -g - \frac{k}{m} v v_y$, where $v = \sqrt{v_x^2 + v_y^2}$ and $\frac{k}{m} = \frac{\rho C_d A}{2m}$.
 
 #### Example Coefficients
 
