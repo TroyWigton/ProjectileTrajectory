@@ -112,11 +112,16 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    ```
 
 4. **Run Integrator Comparison**:
-   To benchmark different numerical methods (Euler, Heun, RK4, RK8) against a high-precision ground truth:
-   ```
+   Benchmarks different numerical methods (Euler, Heun, RK4, RK8) by measuring the computational effort required to achieve high accuracy.
+   - **Scenario**: A Ping Pong ball (High Drag, $k/m \approx 0.134$) launched at $100$ m/s from ground level ($h_0=0$).
+   - **Optimization**: First finds the optimal launch angle for this specific drag profile (approx $24.4^\circ$).
+   - **Ground Truth**: Established using the high-order **Runge-Kutta 8 (RK8)** integrator with an extremely fine time step ($\Delta t = 10^{-5}$ s).
+   - **Method**: The tool iteratively adjusts the time step ($\Delta t$) for each test integrator (Euler, Heun, RK4) until its calculated landing distance matches the Ground Truth within a tight tolerance ($0.0001$ m).
+   - **Output**: Reports the number of steps required for each method to hit that precision target, illustrating the efficiency trade-off between lower-order methods (needs millions of tiny steps) and higher-order methods (needs fewer, expensive steps).
+
+   ```sh
    ./compare_integrators
    ```
-   This tool iteratively refines the time step ($\Delta t$) for each integrator until it matches the ground truth distance within a specified tolerance (0.01m), reporting the efficiency (steps required) of each method.
 
    **Sample Result**:
    ```
@@ -171,8 +176,8 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    Evaluating Derivative Function: V Squared Drag
          Euler: Angle = 34.7324, Distance = 246.264
          Heun: Angle = 34.7358, Distance = 246.275
-         RK4: Angle = 34.7358, Distance = 246.275
-         RK8: Angle = 34.7358, Distance = 246.275
+            RK4: Angle = 34.7358, Distance = 246.275
+            RK8: Angle = 34.7358, Distance = 246.275
    -> Consistency Check (Euler vs RK8): PASSED
       (Diffs - Angle: 0.00343658, Dist: 0.0109617)
    -> Consistency Check (Heun vs RK8): PASSED
@@ -183,8 +188,8 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    Evaluating Derivative Function: Linear Drag
          Euler: Angle = 44.2345, Distance = 966.492
          Heun: Angle = 44.2359, Distance = 966.425
-         RK4: Angle = 44.2359, Distance = 966.425
-         RK8: Angle = 44.2359, Distance = 966.425
+            RK4: Angle = 44.2359, Distance = 966.425
+            RK8: Angle = 44.2359, Distance = 966.425
    -> Consistency Check (Euler vs RK8): PASSED
       (Diffs - Angle: 0.00141116, Dist: 0.0670337)
    -> Consistency Check (Heun vs RK8): PASSED
@@ -203,6 +208,20 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    Theoretical Max Distance: 1114.89 m
    Experimental Max Distance: 1114.89 m
    Distance Check: PASSED (Difference: 1.02653e-06)
+
+   --------------------------------------------------
+   Starting Test Suite: V Squared Drag Trajectory with Variable Height
+   Parameters: v0 = 100 m/s, k/m = 0.0057 (Golf Ball)
+   Hypothesis: As launch height increases, optimal angle should decrease.
+
+   Height (m) Optimal Angle (deg)    Max Distance (m)
+   --------------------------------------------------
+            0             34.7358             246.275
+         50             29.3616             269.451
+         100              25.285             286.965
+         200             19.7593             310.601
+         500             13.4513              337.36
+   Trend verification: PASSED
 
    All tests passed successfully!
    ```
