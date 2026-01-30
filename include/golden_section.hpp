@@ -13,8 +13,9 @@ double golden_section_search_max(Func f, double a, double b, double tol, bool ve
         throw std::invalid_argument("golden_section_search_max: require tol > 0");
     }
 
-    const double golden_ratio = (1.0 + std::sqrt(5.0)) / 2.0;
-    const double inv_golden_ratio = 1.0 / golden_ratio;
+    // Golden ratio phi = (1 + sqrt(5)) / 2
+    constexpr double golden_ratio = 1.61803398874989484820;
+    constexpr double inv_golden_ratio = 1.0 / golden_ratio;
     
     double c = b - (b - a) * inv_golden_ratio;
     double d = a + (b - a) * inv_golden_ratio;
