@@ -99,7 +99,7 @@ void golf_ball_drag_deriv(const State4D& s, double t, State4D& deriv, double g, 
         double ratio = (v - v_start) / (v_end - v_start);
         Cd = Cd_initial - ratio * (Cd_initial - Cd_final);
     } else {
-        // Post-crisis plateau
+        // Post-transition plateau
         Cd = Cd_final;
     }
 
