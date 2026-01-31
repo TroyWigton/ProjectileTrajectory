@@ -71,6 +71,122 @@ State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
     return next_state;
 }
 
+// RK45 Implementation Details (Shared Coefficients and Logic)
+namespace rk45_detail {
+    constexpr double c[7] = {0, 1.0/5.0, 3.0/10.0, 4.0/5.0, 8.0/9.0, 1.0, 1.0};
+    constexpr double a[7][6] = {
+        {0},
+        {1.0/5.0},
+        {3.0/40.0, 9.0/40.0},
+        {44.0/45.0, -56.0/15.0, 32.0/9.0},
+        {19372.0/6561.0, -25360.0/2187.0, 64448.0/6561.0, -212.0/729.0},
+        {9017.0/3168.0, -355.0/33.0, 46732.0/5247.0, 49.0/176.0, -5103.0/18656.0},
+        {35.0/384.0, 0, 500.0/1113.0, 125.0/192.0, -2187.0/6784.0, 11.0/84.0}
+    };
+    constexpr double b5[7] = {35.0/384.0, 0, 500.0/1113.0, 125.0/192.0, -2187.0/6784.0, 11.0/84.0, 0};
+    constexpr double error_coeffs[7] = {
+        35.0/384.0 - 5179.0/57600.0,
+        0 - 0,
+        500.0/1113.0 - 7571.0/16695.0,
+        125.0/192.0 - 393.0/640.0,
+        -2187.0/6784.0 - (-92097.0/339200.0),
+        11.0/84.0 - 187.0/2100.0,
+        0 - 1.0/40.0
+    };
+
+    // Computes the 7 intermediate derivatives (stages or 'k' values) for the RK45 step.
+    //
+    // Algorithm:
+    // This evaluates the system derivative function 7 times within the interval [t, t+dt].
+    // Each stage uses a weighted sum of previous stages (Explicit RK) to probe the slope
+    // at specific points defined by the Butcher tableau. These 7 'k' values capture the
+    // curvature of the function and are shared by both the 4th and 5th order solutions.
+    template<typename State, typename DerivativeFunc>
+    void compute_stages(const State& state, double t, double dt, DerivativeFunc deriv_func, State (&k)[7]) {
+        State temp;
+        deriv_func(state, t, k[0]);
+
+        for (int i = 1; i < 7; ++i) {
+            temp = state;
+            for (int j = 0; j < i; ++j) {
+                // Determine if a[i][j] is effectively non-zero to avoid unnecessary FLOPs
+                if (a[i][j] != 0.0) {
+                    for (size_t s = 0; s < state.size(); ++s) {
+                        temp[s] += dt * a[i][j] * k[j][s];
+                    }
+                }
+            }
+            deriv_func(temp, t + c[i] * dt, k[i]);
+        }
+    }
+}
+
+// Dormand-Prince 5(4) (RK45) - Fixed Step Mode
+// Returns the 5th order solution. Can be used as a high-accuracy fixed-step integrator.
+//
+// How it works:
+// Uses the 7 pre-computed stages to construct a 5th-order approximation of the next state.
+// Unlike the adaptive version, this function ignores the error estimate coefficients,
+// acting purely as a solver that is more accurate per-step than RK4.
+template<typename State, typename DerivativeFunc>
+State rk45_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
+    State k[7];
+    rk45_detail::compute_stages(state, t, dt, deriv_func, k);
+
+    State next_state = state;
+    for (size_t s = 0; s < state.size(); ++s) {
+        for (int i = 0; i < 7; ++i) {
+            if (rk45_detail::b5[i] != 0.0) {
+                next_state[s] += dt * rk45_detail::b5[i] * k[i][s];
+            }
+        }
+    }
+    return next_state;
+}
+
+// Result structure for adaptive integration
+template<typename State>
+struct AdaptiveStepResult {
+    State state; // The 5th order solution
+    State error; // The estimated error (difference between 5th and 4th order)
+};
+
+// Dormand-Prince 5(4) with Error Estimation - Adaptive Step Mode
+// Returns both the high-order (5th) solution and an error estimate.
+//
+// Role in Adaptive Control:
+// The returned 'error' is the difference between the 4th and 5th order solutions.
+// This acts as the error signal for a step-size feedback loop:
+// - Large Error Estimate -> The step size 'dt' should be reduced to maintain accuracy.
+// - Small Error Estimate -> The step size 'dt' can be increased to improve performance.
+template<typename State, typename DerivativeFunc>
+AdaptiveStepResult<State> rk45_adaptive_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
+    State k[7];
+    rk45_detail::compute_stages(state, t, dt, deriv_func, k);
+
+    AdaptiveStepResult<State> result;
+    result.state = state;
+    
+    // Initialize error with zeros
+    for(size_t s=0; s<state.size(); ++s) {
+        result.error[s] = 0.0;
+    }
+
+    // Combine results to calculate state update and error estimate
+    for (size_t s = 0; s < state.size(); ++s) {
+        for (int i = 0; i < 7; ++i) {
+            if (rk45_detail::b5[i] != 0.0) {
+                result.state[s] += dt * rk45_detail::b5[i] * k[i][s];
+            }
+            if (rk45_detail::error_coeffs[i] != 0.0) {
+                result.error[s] += dt * rk45_detail::error_coeffs[i] * k[i][s];
+            }
+        }
+    }
+    
+    return result;
+}
+
 // 8th Order Runge-Kutta
 template<typename State, typename DerivativeFunc>
 State rk8_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {

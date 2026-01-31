@@ -46,8 +46,13 @@ Below are calculated `k_over_m` values for common objects, assuming standard sea
 **Note:** These are approximations using constant drag coefficients. Real-world ballistics involve velocity-dependent $C_d$ (Mach number and Reynolds number variations), but these values provide sufficient baselines for comparison.
 
 ### Numerical Methods
-- **Integration**: Fourth-order Runge-Kutta (RK4) is used to advance the state vector in discrete time steps ($\Delta t$). This offers a good balance between speed and accuracy compared to Euler or Heun methods.
-- **Event Detection**: The simulation loop terminates when the vertical position $y < 0$. To determine the exact impact location, the program performs a linear interpolation between the last state above ground and the current state below ground.
+- **Integration**:
+  - **Euler (1st Order)**: Basic forward stepping method used as a baseline. Simple but requires extremely small time steps for accuracy.
+  - **Heun (2nd Order)**: Also known as the trapezoidal method. Offers improved stability over Euler.
+  - **RK4 (4th Order)**: The classic Runge-Kutta method. Provides an excellent balance of speed and accuracy; used as the default engine.
+  - **RK45 (Dormand-Prince)**: An embedded 5(4) method that provides error estimation. Used for adaptive stepping (variable dt) or high-precision fixed stepping.
+  - **RK8 (8th Order)**: High-order method requiring 13 function evaluations per step. Extremely accurate, used as the "Ground Truth" for benchmarking other methods.
+- **Event Detection**: The main simulation loop terminates when the vertical position $y < 0$. To determine the exact impact location, the program performs a linear interpolation between the last state above ground and the current state below ground.
 
 ### Optimization Strategy
 To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}$, the program treats the simulation as a function $f(\theta) \rightarrow x_{impact}$.
@@ -112,11 +117,10 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    ```
 
 4. **Run Integrator Comparison**:
-   Benchmarks different numerical methods (Euler, Heun, RK4, RK8) by measuring the computational effort required to achieve high accuracy.
-   - **Scenario**: A Ping Pong ball (High Drag, $k/m \approx 0.134$) launched at $100$ m/s from ground level ($h_0=0$).
-   - **Optimization**: First finds the optimal launch angle for this specific drag profile (approx $24.4^\circ$).
-   - **Ground Truth**: Established using the high-order **Runge-Kutta 8 (RK8)** integrator with an extremely fine time step ($\Delta t = 10^{-5}$ s).
-   - **Method**: The tool iteratively adjusts the time step ($\Delta t$) for each test integrator (Euler, Heun, RK4) until its calculated landing distance matches the Ground Truth within a tight tolerance ($0.0001$ m).
+   Benchmarks different numerical methods (Euler, Heun, RK4, RK45, RK8) by measuring the computational effort required to achieve high accuracy.
+   - **Scenario**: A Ping Pong ball (High Drag, $k/m \approx 0.134$) launched at $100$ m/s at a fixed $45^\circ$ angle.
+   - **Method**: The tool runs a fixed-time simulation ($T=3.0s$) and compares the final position against a "Ground Truth" calculated using RK8 with an extremely fine time step ($\Delta t = 10^{-5}$ s).
+   - **Optimization**: It iteratively adjusts the time step ($\Delta t$) for each integrator until its final position error is within the target precision ($0.001$ m).
    - **Output**: Reports the number of steps required for each method to hit that precision target, illustrating the efficiency trade-off between lower-order methods (needs millions of tiny steps) and higher-order methods (needs fewer, expensive steps).
 
    ```sh
@@ -125,21 +129,23 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
 
    **Sample Result**:
    ```
-   Project Comparison Tool
-   Drag coefficient k/m = 0.134
-   Target precision: 0.0001 m
+   Numerical Integrator Benchmark
+   Drag/Mass Ratio (k/m) = 0.134
+   Initial Velocity (v0) = 100 m/s
+   Target Precision: 0.001 m (Position Error Norm at fixed time T=3s)
 
-   Optimal angle used for comparison: 24.3629 degrees
-   Ground Truth (RK8, dt=1e-05): 22.85398 m
+   Reference Truth (RK8, dt=1e-05s) at t=3s: (20.0947, 0.14282)
 
-   Comparison: Required Steps & dt to reach 0.00010 m precision
+   Methodology: Iteratively reducing time step (dt) until error < target precision.
+   Performance Comparison: Steps & dt required to meet target precision
    --------------------------------------------------------------------------------
-   Integrator     Steps          dt (s)         Distance (m)        Error (m)
+   Integrator     Steps          dt (s)         Final Error (m)     
    --------------------------------------------------------------------------------
-   Euler          1073219        1.90735e-06    22.85390            8.25e-05
-   Heun           4193           0.000488281    22.85401            2.57e-05
-   RK4            263            0.0078125      22.85397            1.20e-05
-   RK8            132            0.015625       22.85398            3.39e-06
+   Euler          153726         1.95152e-05    9.97e-04
+   Heun           1084           0.00276753     9.83e-04
+   RK4            135            0.0222222      9.67e-04
+   RK45           118            0.0254237      9.53e-04
+   RK8            33             0.0909091      8.00e-04
    ```
 
 5. **Run Unit Tests**:
