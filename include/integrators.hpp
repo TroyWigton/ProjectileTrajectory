@@ -84,6 +84,18 @@ State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
     // from the start using the refined midpoint slope (k3) across the full step dt.
     deriv_func(temp, t + dt, k4);
 
+    // Final State Update
+    // We compute the true next state by taking a weighted average of the four slopes.
+    // k1, k4 (endpoints) get weight 1.
+    // k2, k3 (midpoints) get weight 2.
+    // The sum is divided by 6, making it analogous to Simpson's Rule for quadrature.
+    //
+    // Why these weights (1/6, 2/6, 2/6, 1/6)?
+    // 1. Simpson's Rule Analogy: Simpson's rule estimates an integral using weights [1, 4, 1] for points
+    //    at the start, mid, and end. Since we have two midpoint estimates (k2, k3), we split the
+    //    middle weight of 4 into 2+2.
+    // 2. Taylor Series Matching: Mathematically, these specific coefficients are required to precisely
+    //    cancel out all error terms in the Taylor series expansion up to order O(dt^4).
     State next_state;
     for (size_t i = 0; i < state.size(); ++i) {
         next_state[i] = state[i] + (dt/6.0) * (k1[i] + 2*k2[i] + 2*k3[i] + k4[i]);
