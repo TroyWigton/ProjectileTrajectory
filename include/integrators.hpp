@@ -46,22 +46,42 @@ State heun_step(const State& state, double t, double dt, DerivativeFunc deriv_fu
 
 
 //Fourth Order Runge-Kutta
+// The "Classical" Runge-Kutta method.
+// A 4th-order method, meaning the local error per step is O(dt^5) and global error is O(dt^4).
+//
+// Geometric Interpretation of the 4 Stages:
+// k1: Slope at the start of the interval (t). This is the Euler predictor.
+// k2: Slope at the midpoint (t + 0.5*dt). The state is estimated using k1. This estimates the slope at the center.
+// k3: Slope at the midpoint (t + 0.5*dt). The state is re-estimated using k2. This refines the midpoint slope.
+// k4: Slope at the end of the interval (t + dt). The state is estimated using k3.
+//
+// The final state update uses a weighted average of these slopes: (k1 + 2*k2 + 2*k3 + k4) / 6.
+// The middle slopes (k2, k3) are given double weight, similar to Simpson's rule for integration,
+// which essentially cancels out lower-order error terms.
 template<typename State, typename DerivativeFunc>
 State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
     State k1, k2, k3, k4, temp;
     
+    // Stage 1: Derivative at the start
     deriv_func(state, t, k1);
     for (size_t i = 0; i < state.size(); ++i)
         temp[i] = state[i] + 0.5 * dt * k1[i];
     
+    // Stage 2: Derivative at midpoint (based on k1)
     deriv_func(temp, t + 0.5*dt, k2);
     for (size_t i = 0; i < state.size(); ++i)
         temp[i] = state[i] + 0.5 * dt * k2[i];
     
+    // Stage 3: Derivative at midpoint (based on k2)
+    // Note: We sample at the *same time* (t + 0.5*dt) as Stage 2. 
+    // The difference is that we use k2 (the improved slope estimate) to reach this point, rather than k1.
     deriv_func(temp, t + 0.5*dt, k3);
     for (size_t i = 0; i < state.size(); ++i)
         temp[i] = state[i] + dt * k3[i];
     
+    // Stage 4: Derivative at end (based on k3)
+    // We estimate the state at the end of the interval (t + dt) by projecting 
+    // from the start using the refined midpoint slope (k3) across the full step dt.
     deriv_func(temp, t + dt, k4);
 
     State next_state;
@@ -71,19 +91,70 @@ State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
     return next_state;
 }
 
-// RK45 Implementation Details (Shared Coefficients and Logic)
+// RK45 (Dormand-Prince) Implementation Details
+//
+// About the Method:
+// Dormand-Prince is a member of the Runge-Kutta family of ODE solvers.
+// It is an "Embedded" method, meaning it generates two results per step:
+// 1. A 5th-order approximation (high accuracy).
+// 2. A 4th-order approximation (lower accuracy).
+// The difference between these two approximations provides an estimate of the local truncation error.
+//
+// These coefficients (The Butcher Tableau) satisfy specific algebraic conditions so that
+// the Taylor series expansion of the approximate solution matches the true solution up to
+// order 5 (for the main result) and order 4 (for the error estimator).
 namespace rk45_detail {
+    // Stage Time Nodes (c coefficients):
+    // Determines the time nodes t_i = t + c_i * dt where we evaluate the system's differential equation.
+    //
+    // Yes, the 'k' values are slopes (derivatives, dy/dt).
+    // "Probing" just means we are sampling the derivative function f(t, y) at a specific point 
+    // to determine which direction the system wants to move.
+    //
+    // k1 (c=0)    : Slope at start of step (t).
+    // k2 (c=1/5)  : Slope at 20% through the time step (t + 0.2*dt).
+    // k3 (c=3/10) : Slope at 30% through the time step.
+    // k4 (c=4/5)  : Slope at 80% through the time step.
+    // k5 (c=8/9)  : Slope at ~89% through the time step.
+    // k6 (c=1)    : Slope at the end of the time step (100%).
+    // k7 (c=1)    : Slope at the end (100%), used for the FSAL property.
+    // Note: If the step is accepted, k7 of the current step becomes k1 of the next step.
     constexpr double c[7] = {0, 1.0/5.0, 3.0/10.0, 4.0/5.0, 8.0/9.0, 1.0, 1.0};
+
+    // Runge-Kutta Matrix (a coefficients):
+    // These define how previous stages contribute to the predictor for the current stage.
+    // For an explicit method, the matrix is lower triangular (a[i][j] = 0 for j >= i).
+    //
+    // Interpretation of indices a[i][j]:
+    // - i (Row): The "Target" stage we are currently calculating.
+    // - j (Column): The "Source" stage (a previous slope) we are adding to the mix.
+    //
+    // The value a[i][j] is the weight applied to slope k[j] when calculating the input state for k[i].
+    // Example: To calculate stage k[2] (i=2), we mix in specific amounts of k[0] (j=0) and k[1] (j=1).
+    // This allows the algorithm to "look back" at previous curvature estimates to refine the current one.
     constexpr double a[7][6] = {
-        {0},
-        {1.0/5.0},
-        {3.0/40.0, 9.0/40.0},
-        {44.0/45.0, -56.0/15.0, 32.0/9.0},
+        {0}, // k1 depends on nothing
+        {1.0/5.0}, // k2 depends on k1
+        {3.0/40.0, 9.0/40.0}, // k3 depends on k1, k2
+        {44.0/45.0, -56.0/15.0, 32.0/9.0}, // ...
         {19372.0/6561.0, -25360.0/2187.0, 64448.0/6561.0, -212.0/729.0},
         {9017.0/3168.0, -355.0/33.0, 46732.0/5247.0, 49.0/176.0, -5103.0/18656.0},
         {35.0/384.0, 0, 500.0/1113.0, 125.0/192.0, -2187.0/6784.0, 11.0/84.0}
     };
+
+    // Weights (b5 coefficients) for the 5th-order solution:
+    // The final result y_{n+1} is a weighted sum of the stages: y_{n+1} = y_n + dt * Σ(b5_i * k_i).
+    // Note that b5[1] is 0, meaning the k2 stage does not contribute directly to the 5th-order solution,
+    // though it influences it indirectly through subsequent stages k3..k7.
+    // Also, b5 matches the last row of 'a' (the predictor for k7), which is the FSAL property.
     constexpr double b5[7] = {35.0/384.0, 0, 500.0/1113.0, 125.0/192.0, -2187.0/6784.0, 11.0/84.0, 0};
+
+    // Error Estimate Coefficients (E = b5 - b4):
+    // Instead of explicitly computing the 4th-order solution, we compute the difference directly.
+    // Error = y_5th - y_4th = sum((b5_i - b4_i) * k_i).
+    // This vector represents that difference.
+    // Notice the last element is non-zero: The 4th order solution uses k7, or rather, the error
+    // estimate requires information from the very end of the step.
     constexpr double error_coeffs[7] = {
         35.0/384.0 - 5179.0/57600.0,
         0 - 0,
@@ -124,10 +195,8 @@ namespace rk45_detail {
 // Dormand-Prince 5(4) (RK45) - Fixed Step Mode
 // Returns the 5th order solution. Can be used as a high-accuracy fixed-step integrator.
 //
-// How it works:
-// Uses the 7 pre-computed stages to construct a 5th-order approximation of the next state.
-// Unlike the adaptive version, this function ignores the error estimate coefficients,
-// acting purely as a solver that is more accurate per-step than RK4.
+// By discarding the error estimate, this function behaves effectively as a standard
+// fixed-step integrator, but with 5th-order accuracy (6 evaluations per step).
 template<typename State, typename DerivativeFunc>
 State rk45_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
     State k[7];
@@ -136,6 +205,7 @@ State rk45_step(const State& state, double t, double dt, DerivativeFunc deriv_fu
     State next_state = state;
     for (size_t s = 0; s < state.size(); ++s) {
         for (int i = 0; i < 7; ++i) {
+            // b5[i] are the weights for the 5th order solution
             if (rk45_detail::b5[i] != 0.0) {
                 next_state[s] += dt * rk45_detail::b5[i] * k[i][s];
             }
@@ -152,13 +222,20 @@ struct AdaptiveStepResult {
 };
 
 // Dormand-Prince 5(4) with Error Estimation - Adaptive Step Mode
-// Returns both the high-order (5th) solution and an error estimate.
+// This is the core component of an adaptive ODE solver (like MATLAB's ode45).
 //
-// Role in Adaptive Control:
-// The returned 'error' is the difference between the 4th and 5th order solutions.
-// This acts as the error signal for a step-size feedback loop:
-// - Large Error Estimate -> The step size 'dt' should be reduced to maintain accuracy.
-// - Small Error Estimate -> The step size 'dt' can be increased to improve performance.
+// Principle:
+// We calculate two solutions "for the price of one" (set of stages):
+// - y_5th: The proposed new state.
+// - y_4th: A slightly less accurate state.
+//
+// The difference (error = y_5th - y_4th) is a computable number that scales with the
+// local step size. If this error is:
+// - Too large (> tolerance): The step must be rejected and retried with smaller dt.
+// - Too small (<< tolerance): The next step size can be aggressively increased.
+//
+// This allows the solver to "slow down" at sharp turns (high curvature) and "speed up"
+// on straightaways (linear dynamics), ensuring efficiency and accuracy.
 template<typename State, typename DerivativeFunc>
 AdaptiveStepResult<State> rk45_adaptive_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
     State k[7];
@@ -175,9 +252,11 @@ AdaptiveStepResult<State> rk45_adaptive_step(const State& state, double t, doubl
     // Combine results to calculate state update and error estimate
     for (size_t s = 0; s < state.size(); ++s) {
         for (int i = 0; i < 7; ++i) {
+            // Accumulate 5th order solution
             if (rk45_detail::b5[i] != 0.0) {
                 result.state[s] += dt * rk45_detail::b5[i] * k[i][s];
             }
+            // Accumulate error difference
             if (rk45_detail::error_coeffs[i] != 0.0) {
                 result.error[s] += dt * rk45_detail::error_coeffs[i] * k[i][s];
             }
@@ -187,10 +266,28 @@ AdaptiveStepResult<State> rk45_adaptive_step(const State& state, double t, doubl
     return result;
 }
 
-// 8th Order Runge-Kutta
+// 8th Order Runge-Kutta (Dormand-Prince 853)
+// The "853" in the name represents the orders of the embedded methods:
+// - 8: The primary solution output is 8th-order accurate.
+// - 5: A 5th-order approximation is calculated to estimate error (adaptive stepping).
+// - 3: A 3rd-order approximation is available for "dense output" (interpolating smooth curves between steps).
+//
+// A high-order explicit Runge-Kutta method.
+//
+// Usage:
+// Ideally suited for problems with very stringent error tolerances (e.g., 10^-9 to 10^-13)
+// or extremely smooth functions (like celestial mechanics/orbits).
+// For looser tolerances, the overhead of 13 stages per step often makes it slower than RK4 or RK45.
+//
+// Coefficients:
+// These are the Dormand-Prince 8(7) coefficients.
+// - Order 8 for the main solution.
+// - Order 5 and 3 embedded methods for error estimation (though this implementation is fixed-step/stripped).
 template<typename State, typename DerivativeFunc>
 State rk8_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
-    // Dormand-Prince 8(7) Butcher tableau coefficients
+    // Butcher Tableau Matrix A (13 stages)
+    // Determines the linear combinations of previous k values to predict the next stage.
+    // The exact fractions are derived to minimize the error terms of the 8th order Taylor series.
     constexpr double a[13][13] = {
         {0},
         {1.0/18.0},
@@ -224,8 +321,9 @@ State rk8_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
          3936647629.0/1978049680.0, -160528059.0/685178525.0,
          248638103.0/1413531060.0}
     };
-    
-    // Time coefficients c for each stage
+
+    // Stage Time Nodes (c coefficients):
+    // Time offsets t_i = t + c[i]*dt for the 13 stages of the RK8 method.
     constexpr double c[13] = {
         0.0,
         1.0/18.0,
@@ -242,6 +340,8 @@ State rk8_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
         1.0
     };
     
+    // Weights (b coefficients) for the 8th-order solution:
+    // Combined to form the final result from the 13 stages: y_{n+1} = y_n + dt * sum(b8_i * k_i).
     constexpr double b8[13] = {
         14005451.0/335480064.0, 0, 0, 0, 0,
         -59238493.0/1068277825.0, 181606767.0/758867731.0,
