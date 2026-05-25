@@ -60,7 +60,7 @@ void variable_drag_deriv(const State4D& s, double t, State4D& deriv, double g, d
         // Linear decay: (mach - 1.0) / 1.0 gives 0..1 fraction
         drag_multiplier = 2.5 - ((mach - 1.0) / 1.0) * 1.5;
     } else if (mach >= 2.0) {
-        // Settled back to base at high mach (per request)
+        // Settled back to base at high mach
         // Note: Realistically it might stay higher, but we fade to base here
         drag_multiplier = 1.0;
     }
