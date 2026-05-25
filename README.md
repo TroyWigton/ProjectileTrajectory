@@ -248,8 +248,18 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    ```
    K/M Variation Analysis
    --------------------------------------------------------
-   v0 = 100 m/s
-   integrator = RK4, dt = 0.001 s
+   Sweeps the drag coefficient (k/m) over 0 to 0.2 and finds the launch angle
+   that maximizes ground-impact distance for each k/m (golden section search).
+   Each trial integrates the 2D trajectory until y < 0, then interpolates to
+   the exact ground crossing.
+
+   Drag Model:            v^2 quadratic drag (drag_deriv_v_squared)
+                          a_drag = -(k/m) * |v| * v_vec
+   Integrator:            RK4, fixed dt = 0.001 s
+   Initial Velocity (v0): 100 m/s
+   Launch Height (h0):    0 m
+   Gravity (g):           9.81 m/s^2
+   Angle Search Bracket:  [10, 80] deg, tolerance 1e-4 deg
    --------------------------------------------------------
           k/m      Optimal Angle (deg)    Max Distance (m)
    --------------------------------------------------------

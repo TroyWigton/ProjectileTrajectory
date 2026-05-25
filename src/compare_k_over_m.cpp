@@ -29,13 +29,22 @@ int main() {
 
     std::cout << "K/M Variation Analysis\n";
     std::cout << "--------------------------------------------------------\n";
-    std::cout << "v0 = " << v0 << " m/s\n";
-    std::cout << "integrator = RK4, dt = " << deltaT << " s\n";
+    std::cout << "Sweeps the drag coefficient (k/m) over 0 to 0.2 and finds the launch angle\n";
+    std::cout << "that maximizes ground-impact distance for each k/m (golden section search).\n";
+    std::cout << "Each trial integrates the 2D trajectory until y < 0, then interpolates to\n";
+    std::cout << "the exact ground crossing.\n\n";
+    std::cout << "Drag Model:            v^2 quadratic drag (drag_deriv_v_squared)\n";
+    std::cout << "                       a_drag = -(k/m) * |v| * v_vec\n";
+    std::cout << "Integrator:            RK4, fixed dt = " << deltaT << " s\n";
+    std::cout << "Initial Velocity (v0): " << v0 << " m/s\n";
+    std::cout << "Launch Height (h0):    0 m\n";
+    std::cout << "Gravity (g):           " << g << " m/s^2\n";
+    std::cout << "Angle Search Bracket:  [10, 80] deg, tolerance 1e-4 deg\n";
     std::cout << "--------------------------------------------------------\n";
-    std::cout << std::setw(10) << "k/m" 
-              << std::setw(25) << "Optimal Angle (deg)" 
+    std::cout << std::setw(10) << "k/m"
+              << std::setw(25) << "Optimal Angle (deg)"
               << std::setw(20) << "Max Distance (m)" << "\n";
-    std::cout << "--------------------------------------------------------\n"; // 10 + 25 + 20 + approx spaces
+    std::cout << "--------------------------------------------------------\n";
 
     // Generate K/M values: 0.0 plus a logarithmic range from 0.001 to 0.2
     std::vector<double> k_values;
