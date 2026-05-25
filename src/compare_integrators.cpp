@@ -33,6 +33,9 @@ int main() {
     const double t_end = 3.0; // Shorter duration to allow Euler to verify easier
 
     std::cout << "Numerical Integrator Benchmark\n";
+    std::cout << "Simulates a 2D projectile (45 deg launch, gravity, v^2 air drag) for a\n";
+    std::cout << "fixed duration T, then compares each integrator's final (x, y) position\n";
+    std::cout << "against an RK8 ground truth to measure accuracy vs. computational cost.\n\n";
     std::cout << "Drag/Mass Ratio (k/m) = " << k_over_m << "\n";
     std::cout << "Initial Velocity (v0) = " << v0 << " m/s\n";
     std::cout << "Target Precision: " << distance_tolerance << " m (Position Error Norm at fixed time T=" << t_end << "s)\n\n";
@@ -64,10 +67,10 @@ int main() {
     const double ground_truth_dt = 1e-5;
     State4D ground_truth_state = run_fixed_time(rk8_step<State4D, SystemDerivative<State4D>>, ground_truth_dt);
     
-    std::cout << "Reference Truth (RK8, dt=" << ground_truth_dt << "s) at t=" << t_end << "s: (" 
-              << ground_truth_state[0] << ", " << ground_truth_state[1] << ")\n\n";
+    std::cout << "Reference Truth (RK8, dt=" << ground_truth_dt << "s) at t=" << t_end << "s: (x="
+              << ground_truth_state[0] << " m, y=" << ground_truth_state[1] << " m)\n\n";
 
-    std::cout << "Methodology: Iteratively reducing time step (dt) until error < target precision.\n";
+    std::cout << "Methodology: Iteratively reducing time step (dt) until position error < target precision.\n";
     std::cout << "Performance Comparison: Steps & dt required to meet target precision\n";
     std::cout << "--------------------------------------------------------------------------------\n";
     std::cout << std::left << std::setw(15) << "Integrator" 

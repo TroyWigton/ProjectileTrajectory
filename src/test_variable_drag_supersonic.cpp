@@ -1,11 +1,12 @@
 /**
- * @file test_variable_drag.cpp
- * @brief Test suite for comparing constant vs variable (Mach-dependent) drag models.
+ * @file test_variable_drag_supersonic.cpp
+ * @brief Compare constant-Cd vs variable-Cd (Mach-dependent) drag on a supersonic projectile.
  *
- * This test evaluates the impact of transonic/supersonic drag rise on a high-velocity
- * projectile (.223 Remington). It compares the trajectories predicted by:
- * 1. Standard Velocity-Squared Drag (constant k/m)
- * 2. Variable Drag (k/m changes with Mach number)
+ * Evaluates the impact of the transonic drag rise and supersonic fade on a high-velocity
+ * projectile (.223 Remington, ~Mach 2.84 at the muzzle). Trajectories compared:
+ *   Model 0: Vacuum (no drag) — theoretical baseline
+ *   Model 1: v^2 drag with constant Cd
+ *   Model 2: v^2 drag with variable Cd (transonic rise with supersonic fade)
  */
 #include <iostream>
 #include <iomanip>
@@ -28,7 +29,7 @@ int main() {
     // Base k/m derived from Cd=0.23 for a 55gr bullet
     const double k_over_m = DragRatios::BULLET_223;
 
-    std::cout << "Variable Drag Model Evaluation (.223 Remington)\n";
+    std::cout << "Supersonic Variable Drag Model Evaluation (.223 Remington)\n";
     std::cout << "--------------------------------------------------------\n";
     std::cout << "Initial Velocity: " << v0 << " m/s (Mach " << std::fixed << std::setprecision(4) << v0/343.0 << ")\n";
     std::cout << "Base k/m: " << k_over_m << "\n";
@@ -54,24 +55,24 @@ int main() {
     std::cout << "  Optimal Angle: " << std::fixed << std::setprecision(4) << opt_angle_vac << " degrees\n";
     std::cout << "  Max Distance:  " << std::fixed << std::setprecision(2) << max_dist_vac << " m\n\n";
 
-    // 1. Standard Drag Model (Constant k/m)
+    // 1. v^2 drag with constant Cd
     Simulation sim_standard(k_over_m, integrator, v0, drag_deriv_v_squared, g, h0);
-    
+
     auto dist_func_std = [&](double angle) {
         return sim_standard.run(angle, deltaT).distance;
     };
 
     double opt_angle_std = golden_section_search_max(dist_func_std, 10.0, 60.0, 1e-4);
     double max_dist_std = dist_func_std(opt_angle_std);
-    
-    std::cout << "Model 1: Standard v^2 Drag (Constant Coeff)\n";
+
+    std::cout << "Model 1: v^2 drag, constant Cd\n";
     std::cout << "  Optimal Angle: " << std::fixed << std::setprecision(4) << opt_angle_std << " degrees\n";
     std::cout << "  Max Distance:  " << std::fixed << std::setprecision(2) << max_dist_std << " m\n\n";
 
 
-    // 2. Variable Drag Model (Mach Dependent)
+    // 2. v^2 drag with variable Cd (Mach-dependent: transonic rise with supersonic fade)
     Simulation sim_variable(k_over_m, integrator, v0, variable_drag_deriv, g, h0);
-    
+
     auto dist_func_var = [&](double angle) {
         return sim_variable.run(angle, deltaT).distance;
     };
@@ -79,17 +80,18 @@ int main() {
     double opt_angle_var = golden_section_search_max(dist_func_var, 10.0, 60.0, 1e-4);
     double max_dist_var = dist_func_var(opt_angle_var);
 
-    std::cout << "Model 2: Variable Drag (Transonic Rise)\n";
+    std::cout << "Model 2: v^2 drag, variable Cd (transonic rise with supersonic fade)\n";
     std::cout << "  Optimal Angle: " << std::fixed << std::setprecision(4) << opt_angle_var << " degrees\n";
     std::cout << "  Max Distance:  " << std::fixed << std::setprecision(2) << max_dist_var << " m\n\n";
 
-    // Comparison
+    // Compare Model 1 (constant Cd) vs Model 2 (variable Cd) to isolate the
+    // transonic/supersonic Cd variation effect.
     double dist_diff = max_dist_std - max_dist_var;
     double percent_diff = (dist_diff / max_dist_std) * 100.0;
-    
-    std::cout << "Impact Analysis:\n";
-    std::cout << "  Range Reduction: " << dist_diff << " m (" << percent_diff << "% loss)\n";
-    std::cout << "  Angle Shift:     " << (opt_angle_var - opt_angle_std) << " degrees\n";
+
+    std::cout << "Impact Analysis (Model 2 variable Cd vs Model 1 constant Cd):\n";
+    std::cout << "  Range Reduction: " << dist_diff << " m (" << percent_diff << "% loss vs constant Cd)\n";
+    std::cout << "  Angle Shift:     " << (opt_angle_var - opt_angle_std) << " degrees (variable Cd - constant Cd)\n";
 
     return 0;
 }

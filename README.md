@@ -130,13 +130,17 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    **Sample Result**:
    ```
    Numerical Integrator Benchmark
+   Simulates a 2D projectile (45 deg launch, gravity, v^2 air drag) for a
+   fixed duration T, then compares each integrator's final (x, y) position
+   against an RK8 ground truth to measure accuracy vs. computational cost.
+
    Drag/Mass Ratio (k/m) = 0.134
    Initial Velocity (v0) = 100 m/s
    Target Precision: 0.001 m (Position Error Norm at fixed time T=3s)
 
-   Reference Truth (RK8, dt=1e-05s) at t=3s: (20.0947, 0.14282)
+   Reference Truth (RK8, dt=1e-05s) at t=3s: (x=20.0947 m, y=0.14282 m)
 
-   Methodology: Iteratively reducing time step (dt) until error < target precision.
+   Methodology: Iteratively reducing time step (dt) until position error < target precision.
    Performance Comparison: Steps & dt required to meet target precision
    --------------------------------------------------------------------------------
    Integrator     Steps          dt (s)         Final Error (m)     
@@ -275,15 +279,15 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
       0.20000                 23.42878            16.35945
       ```
 
-7. **Run Variable Drag Test**:
-   Evaluates the impact of Mach-dependent drag (transonic wave drag) on a high-velocity projectile (.223 Remington).
-   It compares a vacuum baseline, a standard constant-drag model, and a variable-drag model where $C_d$ rises significantly near Mach 1.0.
+7. **Run Supersonic Variable Drag Test**:
+   Evaluates the impact of Mach-dependent drag (transonic wave drag with supersonic fade) on a high-velocity projectile (.223 Remington, ~Mach 2.84 at the muzzle).
+   It compares a vacuum baseline, a v^2 drag model with constant $C_d$, and a v^2 drag model with variable $C_d$ that rises through the transonic regime and fades back at higher Mach.
    ```sh
-   ./test_variable_drag
+   ./test_variable_drag_supersonic
    ```
    **Sample Result**:
    ```
-   Variable Drag Model Evaluation (.223 Remington)
+   Supersonic Variable Drag Model Evaluation (.223 Remington)
    --------------------------------------------------------
    Initial Velocity: 975 m/s (Mach 2.8426)
    Base k/m: 0.0012
@@ -294,17 +298,17 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
      Optimal Angle: 44.9999 degrees
      Max Distance:  96903.67 m
 
-   Model 1: Standard v^2 Drag (Constant Coeff)
+   Model 1: v^2 drag, constant Cd
      Optimal Angle: 24.7662 degrees
      Max Distance:  2481.73 m
 
-   Model 2: Variable Drag (Transonic Rise)
+   Model 2: v^2 drag, variable Cd (transonic rise with supersonic fade)
      Optimal Angle: 26.3674 degrees
      Max Distance:  2162.62 m
 
-   Impact Analysis:
-     Range Reduction: 319.10 m (12.86% loss)
-     Angle Shift:     1.60 degrees
+   Impact Analysis (Model 2 variable Cd vs Model 1 constant Cd):
+     Range Reduction: 319.10 m (12.86% loss vs constant Cd)
+     Angle Shift:     1.60 degrees (variable Cd - constant Cd)
    ```
 
 ## Help
@@ -331,9 +335,9 @@ clang++ -std=c++14 -O3 -I include -o test src/test.cpp src/simulation.cpp src/de
 clang++ -std=c++14 -O3 -I include -o compare_k_over_m src/compare_k_over_m.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
-**Variable Drag Analysis:**
+**Supersonic Variable Drag Analysis:**
 ```sh
-clang++ -std=c++14 -O3 -I include -o test_variable_drag src/test_variable_drag.cpp src/simulation.cpp src/derivative_functions.cpp
+clang++ -std=c++14 -O3 -I include -o test_variable_drag_supersonic src/test_variable_drag_supersonic.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
 ## Authors
