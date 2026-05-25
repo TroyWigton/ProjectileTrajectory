@@ -118,10 +118,10 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
 
 4. **Run Integrator Comparison**:
    Benchmarks different numerical methods (Euler, Heun, RK4, RK45, RK8) by measuring the computational effort required to achieve high accuracy.
-   - **Scenario**: A Ping Pong ball (High Drag, $k/m \approx 0.134$) launched at $100$ m/s at a fixed $45^\circ$ angle.
-   - **Method**: The tool runs a fixed-time simulation ($T=3.0s$) and compares the final position against a "Ground Truth" calculated using RK8 with an extremely fine time step ($\Delta t = 10^{-5}$ s).
+   - **Scenario**: A Ping Pong ball (High Drag, $k/m \approx 0.134$) launched at $200$ m/s at a fixed $45^\circ$ angle.
+   - **Method**: The tool runs a fixed-time simulation ($T=20.0s$) and compares the final position against a "Ground Truth" calculated using RK8 with an extremely fine time step ($\Delta t = 10^{-5}$ s).
    - **Optimization**: It iteratively adjusts the time step ($\Delta t$) for each integrator until its final position error is within the target precision ($0.001$ m).
-   - **Output**: Reports the number of steps required for each method to hit that precision target, illustrating the efficiency trade-off between lower-order methods (needs millions of tiny steps) and higher-order methods (needs fewer, expensive steps).
+   - **Output**: Reports the number of steps, time step, final position error, and wall-clock runtime (one timed run at the converged dt) for each method, illustrating the efficiency trade-off between lower-order methods (millions of cheap steps) and higher-order methods (fewer but more expensive steps).
 
    ```sh
    ./compare_integrators
@@ -130,26 +130,29 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    **Sample Result**:
    ```
    Numerical Integrator Benchmark
-   Simulates a 2D projectile (45 deg launch, gravity, v^2 air drag) for a
-   fixed duration T, then compares each integrator's final (x, y) position
-   against an RK8 ground truth to measure accuracy vs. computational cost.
+   Simulates a 2D projectile (gravity + v^2 air drag) for a fixed duration T,
+   then compares each integrator's final (x, y) position against an RK8 ground
+   truth to measure accuracy vs. computational cost.
 
-   Drag/Mass Ratio (k/m) = 0.134
-   Initial Velocity (v0) = 100 m/s
-   Target Precision: 0.001 m (Position Error Norm at fixed time T=3s)
+   Launch Angle:         45 deg
+   Initial Velocity (v0): 200 m/s
+   Drag/Mass Ratio (k/m): 0.134
+   Simulation Duration:  20 s
+   Target Precision:     0.001 m (Position Error Norm at t=T)
 
-   Reference Truth (RK8, dt=1e-05s) at t=3s: (x=20.0947 m, y=0.14282 m)
+   Reference Truth (RK8, dt=1e-05s) at t=20s: (x=24.564 m, y=-141.258 m)
 
    Methodology: Iteratively reducing time step (dt) until position error < target precision.
-   Performance Comparison: Steps & dt required to meet target precision
-   --------------------------------------------------------------------------------
-   Integrator     Steps          dt (s)         Final Error (m)     
-   --------------------------------------------------------------------------------
-   Euler          153726         1.95152e-05    9.97e-04
-   Heun           1084           0.00276753     9.83e-04
-   RK4            135            0.0222222      9.67e-04
-   RK45           118            0.0254237      9.53e-04
-   RK8            33             0.0909091      8.00e-04
+                Runtime is measured by re-running once at the converged dt.
+   Performance Comparison: Steps, dt, error, and wall-clock runtime to meet target precision
+   --------------------------------------------------------------------------------------------
+   Integrator     Steps          dt (s)         Final Error (m)     Runtime (ms)
+   --------------------------------------------------------------------------------------------
+   Euler          2156009        9.2764e-06     9.99e-04            35.049
+   Heun           14309          0.00139772     9.88e-04            0.469
+   RK4            1787           0.0111919      9.88e-04            0.109
+   RK45           1568           0.0127551      9.48e-04            0.145
+   RK8            429            0.04662        9.83e-04            0.083
    ```
 
 5. **Run Unit Tests**:
