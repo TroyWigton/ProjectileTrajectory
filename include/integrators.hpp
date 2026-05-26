@@ -12,17 +12,31 @@ using SystemDerivative = std::function<void(const State& current_state, double c
 template <typename State>
 using SystemIntegrator = std::function<State(const State& current_state, double current_time, double time_step, SystemDerivative<State> derivative_func)>;
 
-// State temporaries (k1, k2, ..., next_state) are initialized via `= state` rather than
-// default-constructed. This sizes runtime-sized containers (e.g. std::vector<double>) to
-// match the input state. For compile-time-sized containers (e.g. std::array<double, N>)
-// it copies a small fixed number of doubles that get overwritten anyway — typically
-// optimized away. Without this, vector-backed states crash because `State foo;`
-// default-constructs an empty vector and `foo[i] = ...` is undefined behavior.
+// Stage temporaries (k1, k2, ..., temp) are declared thread_local inside each
+// integrator: one set per thread per template instantiation, lazily sized from
+// the input state on the first call, then reused across subsequent calls.
+//
+// For runtime-sized containers (std::vector<double>) this eliminates per-step
+// heap allocation of the stage workspace — substantial savings when many steps
+// run. For compile-time-sized containers (std::array<double, N>) the size
+// check folds to a compile-time constant and the conditional initialization
+// is elided — zero runtime overhead vs. plain local declarations.
+//
+// Return values (next_state, result.state, result.error) remain plain locals so
+// that RVO/NRVO can construct the caller's destination directly, avoiding an
+// extra copy on the return path.
+//
+// Constraint: thread_local workspace is shared across all invocations on the
+// same thread. The integrators must NOT be invoked recursively (e.g., a
+// derivative function calling the same integrator) — that would clobber the
+// in-flight workspace. Standard numerical integration patterns never do this.
 
 //Forward Euler (Explicit Euler)
 template<typename State, typename DerivativeFunc>
 State euler_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
-    State deriv = state;
+    thread_local State deriv;
+    if (deriv.size() != state.size()) { deriv = state; }
+
     deriv_func(state, t, deriv);
 
     State next_state = state;
@@ -36,7 +50,8 @@ State euler_step(const State& state, double t, double dt, DerivativeFunc deriv_f
 //Heun's Method (Trapezoidal Rule)
 template<typename State, typename DerivativeFunc>
 State heun_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
-    State k1 = state, k2 = state, temp = state;
+    thread_local State k1, k2, temp;
+    if (k1.size() != state.size()) { k1 = state; k2 = state; temp = state; }
 
     deriv_func(state, t, k1);
     for (size_t i = 0; i < state.size(); ++i) {
@@ -67,7 +82,8 @@ State heun_step(const State& state, double t, double dt, DerivativeFunc deriv_fu
 // which essentially cancels out lower-order error terms.
 template<typename State, typename DerivativeFunc>
 State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
-    State k1 = state, k2 = state, k3 = state, k4 = state, temp = state;
+    thread_local State k1, k2, k3, k4, temp;
+    if (k1.size() != state.size()) { k1 = state; k2 = state; k3 = state; k4 = state; temp = state; }
 
     // Stage 1: Derivative at the start
     deriv_func(state, t, k1);
@@ -185,7 +201,9 @@ namespace rk45_detail {
     // curvature of the function and are shared by both the 4th and 5th order solutions.
     template<typename State, typename DerivativeFunc>
     void compute_stages(const State& state, double t, double dt, DerivativeFunc deriv_func, State (&k)[7]) {
-        State temp;
+        thread_local State temp;
+        if (temp.size() != state.size()) { temp = state; }
+
         deriv_func(state, t, k[0]);
 
         for (int i = 1; i < 7; ++i) {
@@ -210,8 +228,9 @@ namespace rk45_detail {
 // fixed-step integrator, but with 5th-order accuracy (6 evaluations per step).
 template<typename State, typename DerivativeFunc>
 State rk45_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
-    State k[7];
-    for (auto& ki : k) ki = state;  // Size each stage to match input state.
+    thread_local State k[7];
+    if (k[0].size() != state.size()) { for (auto& ki : k) ki = state; }
+
     rk45_detail::compute_stages(state, t, dt, deriv_func, k);
 
     State next_state = state;
@@ -250,15 +269,19 @@ struct AdaptiveStepResult {
 // on straightaways (linear dynamics), ensuring efficiency and accuracy.
 template<typename State, typename DerivativeFunc>
 AdaptiveStepResult<State> rk45_adaptive_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
-    State k[7];
-    for (auto& ki : k) ki = state;  // Size each stage to match input state.
+    thread_local State k[7];
+    if (k[0].size() != state.size()) { for (auto& ki : k) ki = state; }
+
     rk45_detail::compute_stages(state, t, dt, deriv_func, k);
 
+    // Return-value members sized from the input state. `result.state` is then
+    // accumulated into by the 5th-order weighting loop below; `result.error`
+    // is explicitly zeroed first so the difference-coeffs loop accumulates
+    // cleanly.
     AdaptiveStepResult<State> result;
     result.state = state;
-    result.error = state;  // Size error to match state; values overwritten by the loop below.
+    result.error = state;
 
-    // Initialize error with zeros
     for(size_t s=0; s<state.size(); ++s) {
         result.error[s] = 0.0;
     }
@@ -364,9 +387,12 @@ State rk8_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
         -528747749.0/2220607170.0, 1.0/4.0
     };
     
-    State k[13];
-    for (auto& ki : k) ki = state;  // Size each stage to match input state.
-    State temp_state = state;
+    thread_local State k[13];
+    thread_local State temp_state;
+    if (k[0].size() != state.size()) {
+        for (auto& ki : k) ki = state;
+        temp_state = state;
+    }
 
     // Stage 1
     deriv_func(state, t, k[0]);
