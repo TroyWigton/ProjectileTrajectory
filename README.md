@@ -333,6 +333,11 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
      ./test_golf_ball
      ```
 
+   - **`test_convergence`** — Empirical order-of-convergence test for the five fixed-step integrators. Runs each at progressively halved dt values against an ultra-precise RK8 reference and reports the error ratios and `log2(ratio)` empirical orders. Recovers theoretical orders 1, 2, 4, 5, 8 for Euler, Heun, RK4, RK45, and RK8 respectively (asymptotically, before the floating-point precision floor).
+     ```sh
+     ./test_convergence
+     ```
+
    - **`test_adaptive`** — Demonstrates the adaptive RK45 integrator on a golf-ball trajectory at two error tolerances. Reports accepted/rejected step counts, achieved min/max dt range, and final flight distance.
      ```sh
      ./test_adaptive
@@ -380,6 +385,11 @@ clang++ -std=c++14 -O3 -I include -o test_golf_ball src/test_golf_ball.cpp src/s
 **Adaptive RK45 Demo:**
 ```sh
 clang++ -std=c++14 -O3 -I include -o test_adaptive src/test_adaptive.cpp src/simulation.cpp src/derivative_functions.cpp
+```
+
+**Convergence Order Test:**
+```sh
+clang++ -std=c++14 -O3 -I include -o test_convergence src/test_convergence.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
 **3D Motion Demo:**
