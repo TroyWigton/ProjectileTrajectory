@@ -7,41 +7,47 @@
  * the numerical integrators to evolve the system state over time.
  *
  * Supported Models:
- * - v_squared_drag: Standard quadratic air resistance (F_drag ~ v^2).
- * - linear_drag: Linear air resistance (F_drag ~ v), useful for Stokes' law regime.
- * - no_drag: Vacuum trajectory, theoretical baseline.
+ * - v_squared_drag:   Standard quadratic air resistance (F_drag ~ v^2).
+ * - linear_drag:      Linear air resistance (F_drag ~ v), useful for Stokes' law regime.
+ * - no_drag:          Vacuum trajectory, theoretical baseline.
+ * - golf_ball_drag:   Velocity-dependent laminar/turbulent Cd transition.
+ * - variable_drag:    Mach-dependent Cd with transonic rise and supersonic fade.
+ *
+ * All models follow the ParameterizedDerivative<State4D, ProjectileContext>
+ * signature; projectile-specific parameters (g, k/m) are bundled in the
+ * ProjectileContext rather than passed as positional doubles.
  */
 #include "../include/derivative_functions.hpp"
 #include "../include/types.hpp"
 #include "../include/constants.hpp"
 #include <cmath>
 
-void drag_deriv_v_squared(const State4D& s, double t, State4D& deriv, double g, double k_over_m) {
+void drag_deriv_v_squared(const State4D& s, double t, State4D& deriv, const ProjectileContext& ctx) {
     using namespace StateIndex4D;
     const double v = std::sqrt(s[X_VEL]*s[X_VEL] + s[Y_VEL]*s[Y_VEL]);
     deriv[X_POS] = s[X_VEL];  // dx/dt = vx
     deriv[Y_POS] = s[Y_VEL];  // dy/dt = vy
-    deriv[X_VEL] = -k_over_m * v * s[X_VEL];  // dvx/dt = -k/m * v * vx
-    deriv[Y_VEL] = -g - k_over_m * v * s[Y_VEL];  // dvy/dt = -g -k/m * v * vy
+    deriv[X_VEL] = -ctx.k_over_m * v * s[X_VEL];          // dvx/dt = -k/m * v * vx
+    deriv[Y_VEL] = -ctx.g - ctx.k_over_m * v * s[Y_VEL];  // dvy/dt = -g -k/m * v * vy
 }
 
-void drag_deriv_linear(const State4D& s, double t, State4D& deriv, double g, double k_over_m) {
+void drag_deriv_linear(const State4D& s, double t, State4D& deriv, const ProjectileContext& ctx) {
     using namespace StateIndex4D;
     deriv[X_POS] = s[X_VEL];  // dx/dt = vx
     deriv[Y_POS] = s[Y_VEL];  // dy/dt = vy
-    deriv[X_VEL] = -k_over_m * s[X_VEL];  // dvx/dt = -k/m * vx
-    deriv[Y_VEL] = -g - k_over_m * s[Y_VEL];  // dvy/dt = -g -k/m * vy
+    deriv[X_VEL] = -ctx.k_over_m * s[X_VEL];          // dvx/dt = -k/m * vx
+    deriv[Y_VEL] = -ctx.g - ctx.k_over_m * s[Y_VEL];  // dvy/dt = -g -k/m * vy
 }
 
-void no_drag_deriv(const State4D& s, double t, State4D& deriv, double g, double) {
+void no_drag_deriv(const State4D& s, double t, State4D& deriv, const ProjectileContext& ctx) {
     using namespace StateIndex4D;
     deriv[X_POS] = s[X_VEL];  // dx/dt = vx
     deriv[Y_POS] = s[Y_VEL];  // dy/dt = vy
     deriv[X_VEL] = 0.0;       // dvx/dt = 0
-    deriv[Y_VEL] = -g;        // dvy/dt = -g
+    deriv[Y_VEL] = -ctx.g;    // dvy/dt = -g
 }
 
-void variable_drag_deriv(const State4D& s, double t, State4D& deriv, double g, double base_k_over_m) {
+void variable_drag_deriv(const State4D& s, double t, State4D& deriv, const ProjectileContext& ctx) {
     using namespace StateIndex4D;
     // 1. Calculate current speed from State
     double v_sq = s[X_VEL]*s[X_VEL] + s[Y_VEL]*s[Y_VEL];
@@ -64,19 +70,19 @@ void variable_drag_deriv(const State4D& s, double t, State4D& deriv, double g, d
         // Note: Realistically it might stay higher, but we fade to base here
         drag_multiplier = 1.0;
     }
-    
-    double current_k_over_m = base_k_over_m * drag_multiplier;
+
+    double current_k_over_m = ctx.k_over_m * drag_multiplier;
 
     // 3. Apply force
     deriv[X_POS] = s[X_VEL];
     deriv[Y_POS] = s[Y_VEL];
-    
+
     // Apply drag acceleration
     deriv[X_VEL] = -current_k_over_m * v * s[X_VEL];
-    deriv[Y_VEL] = -g - current_k_over_m * v * s[Y_VEL];
+    deriv[Y_VEL] = -ctx.g - current_k_over_m * v * s[Y_VEL];
 }
 
-void golf_ball_drag_deriv(const State4D& s, double t, State4D& deriv, double g, double v_critical) {
+void golf_ball_drag_deriv(const State4D& s, double t, State4D& deriv, const ProjectileContext& ctx) {
     using namespace StateIndex4D;
 
     // 1. Calculate Velocity
@@ -85,7 +91,7 @@ void golf_ball_drag_deriv(const State4D& s, double t, State4D& deriv, double g, 
 
     // 2. Determine Cd based on Velocity
     double Cd;
-    
+
     // Use Shared Constants
     const double v_start = GolfBallPhysics::V_TRANSITION_START;
     const double v_end = GolfBallPhysics::V_TRANSITION_END;
@@ -103,12 +109,13 @@ void golf_ball_drag_deriv(const State4D& s, double t, State4D& deriv, double g, 
         Cd = Cd_final;
     }
 
-    // 3. Calculate dynamic k/m
+    // 3. Calculate dynamic k/m. Note: ctx.k_over_m is ignored — this model
+    // derives drag entirely from GolfBallPhysics constants.
     double current_k_over_m = GolfBallPhysics::FACTOR_F * Cd;
 
     // 4. Apply derivatives
     deriv[X_POS] = s[X_VEL];
     deriv[Y_POS] = s[Y_VEL];
     deriv[X_VEL] = -current_k_over_m * v * s[X_VEL];
-    deriv[Y_VEL] = -g - current_k_over_m * v * s[Y_VEL];
+    deriv[Y_VEL] = -ctx.g - current_k_over_m * v * s[Y_VEL];
 }

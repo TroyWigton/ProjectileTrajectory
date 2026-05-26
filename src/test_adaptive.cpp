@@ -32,10 +32,9 @@ void run_adaptive_simulation(double tolerance) {
     const double h0 = 0.0;
     
     // Golf ball physics constants are handled inside the derivative function
-    // But we need to pass a dummy dummy k/m or v_critical if the signature requires it.
-    // golf_ball_drag_deriv signature: (s, t, deriv, g, v_critical)
-    // We'll hardcode v_critical inside the loop or pass 0 if it's unused (the function uses shared constants)
-    const double dummy_param = 0.0; 
+    // golf_ball_drag_deriv reads g from the context; k_over_m is unused
+    // because the model derives drag entirely from GolfBallPhysics constants.
+    ProjectileContext ctx{g, 0.0};
 
     // Setup State
     State4D state = {0.0, h0, v0 * std::cos(angle_rad), v0 * std::sin(angle_rad)};
@@ -54,8 +53,8 @@ void run_adaptive_simulation(double tolerance) {
     std::cout << "-----------------------------------------------------\n";
 
     // Lambda for derivative to match signature expected by rk45_adaptive_step
-    auto deriv_func = [&](const State4D& s, double time, State4D& out) {
-        golf_ball_drag_deriv(s, time, out, g, dummy_param);
+    auto deriv_func = [&ctx](const State4D& s, double time, State4D& out) {
+        golf_ball_drag_deriv(s, time, out, ctx);
     };
 
     while (state[Y_POS] >= 0.0) {

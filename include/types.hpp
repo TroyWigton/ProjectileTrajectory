@@ -55,15 +55,4 @@ template <typename State, typename Context>
 using ParameterizedDerivative =
     std::function<void(const State& state, double t, State& deriv_out, const Context& ctx)>;
 
-// Projectile-specific signature with positional (g, k_over_m) parameters.
-// Retained for source-compatibility with the existing derivative functions
-// and Simulation class. New code should prefer ParameterizedDerivative<>
-// with a problem-specific Context struct.
-using DerivativeFuncPtr = std::function<void(
-    const State4D& current_state,
-    double         current_time,
-    State4D&       derivative_output,
-    double         gravity,
-    double         k_over_m)>;
-
 #endif // TYPES_HPP
