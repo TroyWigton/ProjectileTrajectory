@@ -324,18 +324,97 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
      Angle Shift:     1.60 degrees (variable Cd - constant Cd)
    ```
 
-8. **Additional Executables**:
+8. **Run Convergence Order Test**:
+   Measures the empirical order of convergence for each fixed-step integrator.
+   For each method, the same smooth v² drag projectile is integrated to a fixed
+   t=T at progressively halved dt values; the global position error at t=T is
+   compared against an ultra-precise RK8 reference, and the empirical order
+   $= \log_2(\text{error}_{prev} / \text{error}_{curr})$ is reported per row.
+   For a method of theoretical order $p$, the empirical order should approach
+   $p$ until the error reaches the floating-point precision floor.
+   ```sh
+   ./test_convergence
+   ```
+
+   **Sample Result**:
+   ```
+   Numerical Integrator Convergence Test
+   ------------------------------------------------------------
+   Test problem (smooth v^2 drag):
+     v0           = 100 m/s
+     launch angle = 45 deg
+     k/m          = 0.0057 (golf ball)
+     duration T   = 5 s
+   Reference: RK8 at dt = 1e-06 (truth = (176.396, 88.2665) m)
+
+   ------------------------------------------------------------
+   Euler (theoretical order 1)
+   ------------------------------------------------------------
+   dt (s)      Error (m)      Error ratio    Emp. order
+   0.1         4.507e-01      -              -
+   0.05        2.220e-01      2.03           1.02
+   0.025       1.104e-01      2.01           1.01
+   0.0125      5.506e-02      2              1.00
+   0.00625     2.750e-02      2              1.00
+   0.003125    1.374e-02      2              1.00
+
+   ------------------------------------------------------------
+   Heun (theoretical order 2)
+   ------------------------------------------------------------
+   dt (s)      Error (m)      Error ratio    Emp. order
+   0.1         1.953e-02      -              -
+   0.05        4.495e-03      4.34           2.12
+   0.025       1.079e-03      4.16           2.06
+   0.0125      2.646e-04      4.08           2.03
+   0.00625     6.549e-05      4.04           2.01
+   0.003125    1.629e-05      4.02           2.01
+
+   ------------------------------------------------------------
+   RK4 (theoretical order 4)
+   ------------------------------------------------------------
+   dt (s)      Error (m)      Error ratio    Emp. order
+   0.1         3.088e-05      -              -
+   0.05        1.828e-06      16.9           4.08
+   0.025       1.112e-07      16.4           4.04
+   0.0125      6.871e-09      16.2           4.02
+   0.00625     4.483e-10      15.3           3.94
+
+   ------------------------------------------------------------
+   RK45 (fixed) (theoretical order 5)
+   ------------------------------------------------------------
+   dt (s)      Error (m)      Error ratio    Emp. order
+   0.5         5.390e-03      -              -
+   0.25        4.752e-05      113            6.83
+   0.125       4.723e-07      101            6.65
+   0.0625      4.209e-09      112            6.81
+   0.03125     7.556e-11      55.7           5.80
+
+   ------------------------------------------------------------
+   RK8 (theoretical order 8)
+   ------------------------------------------------------------
+   dt (s)      Error (m)      Error ratio    Emp. order
+   1           2.136e-05      -              -
+   0.5         7.318e-08      292            8.19
+   0.25        2.984e-10      245            7.94
+   0.125       8.228e-11      3.63           1.86
+   0.0625      8.229e-11      1              -0.00
+   ```
+
+   Euler, Heun, and RK4 each recover their theoretical orders cleanly across
+   the dt sweep. RK45 shows super-convergence at moderate dt (next-order error
+   terms partially cancel the leading term), with the empirical order trending
+   toward the theoretical 5 as dt shrinks. RK8 recovers order 8 cleanly for
+   two halvings before the error reaches the floating-point precision floor
+   (~1e-10 for this problem, limited by the reference's own accumulated
+   rounding).
+
+9. **Additional Executables**:
 
    Three more programs ship in `build/` for specialized demonstrations:
 
    - **`test_golf_ball`** — Compares optimal-angle trajectories under three golf-ball drag models: vacuum, constant-Cd v² drag, and velocity-dependent Cd that transitions from laminar to turbulent across the 18-25 m/s range.
      ```sh
      ./test_golf_ball
-     ```
-
-   - **`test_convergence`** — Empirical order-of-convergence test for the five fixed-step integrators. Runs each at progressively halved dt values against an ultra-precise RK8 reference and reports the error ratios and `log2(ratio)` empirical orders. Recovers theoretical orders 1, 2, 4, 5, 8 for Euler, Heun, RK4, RK45, and RK8 respectively (asymptotically, before the floating-point precision floor).
-     ```sh
-     ./test_convergence
      ```
 
    - **`test_adaptive`** — Demonstrates the adaptive RK45 integrator on a golf-ball trajectory at two error tolerances. Reports accepted/rejected step counts, achieved min/max dt range, and final flight distance.
