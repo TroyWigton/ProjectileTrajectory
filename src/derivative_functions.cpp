@@ -14,8 +14,8 @@
  * - variable_drag:    Mach-dependent Cd with transonic rise and supersonic fade.
  *
  * All models follow the ParameterizedDerivative<State4D, ProjectileContext>
- * signature; projectile-specific parameters (g, k/m) are bundled in the
- * ProjectileContext rather than passed as positional doubles.
+ * signature; projectile-specific parameters (g, k/m) are carried in the
+ * ProjectileContext bundle.
  */
 #include "../include/derivative_functions.hpp"
 #include "../include/types.hpp"

@@ -16,13 +16,13 @@ using SystemIntegrator = std::function<State(const State& current_state, double 
 // integrator: one set per thread per template instantiation, lazily sized from
 // the input state on the first call, then reused across subsequent calls.
 //
-// For runtime-sized containers (std::vector<double>) this eliminates per-step
-// heap allocation of the stage workspace — substantial savings when many steps
-// run. For compile-time-sized containers (std::array<double, N>) the size
-// check folds to a compile-time constant and the conditional initialization
-// is elided — zero runtime overhead vs. plain local declarations.
+// For runtime-sized containers (std::vector<double>) this avoids per-step heap
+// allocation of the stage workspace — substantial savings when many steps run.
+// For compile-time-sized containers (std::array<double, N>) the size check
+// folds to a compile-time constant and the conditional initialization is
+// elided.
 //
-// Return values (next_state, result.state, result.error) remain plain locals so
+// Return values (next_state, result.state, result.error) are plain locals so
 // that RVO/NRVO can construct the caller's destination directly, avoiding an
 // extra copy on the return path.
 //
