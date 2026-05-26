@@ -12,13 +12,34 @@ using SystemDerivative = std::function<void(const State& current_state, double c
 template <typename State>
 using SystemIntegrator = std::function<State(const State& current_state, double current_time, double time_step, SystemDerivative<State> derivative_func)>;
 
+// Stage temporaries (k1, k2, ..., temp) are declared thread_local inside each
+// integrator: one set per thread per template instantiation, lazily sized from
+// the input state on the first call, then reused across subsequent calls.
+//
+// For runtime-sized containers (std::vector<double>) this avoids per-step heap
+// allocation of the stage workspace — substantial savings when many steps run.
+// For compile-time-sized containers (std::array<double, N>) the size check
+// folds to a compile-time constant and the conditional initialization is
+// elided.
+//
+// Return values (next_state, result.state, result.error) are plain locals so
+// that RVO/NRVO can construct the caller's destination directly, avoiding an
+// extra copy on the return path.
+//
+// Constraint: thread_local workspace is shared across all invocations on the
+// same thread. The integrators must NOT be invoked recursively (e.g., a
+// derivative function calling the same integrator) — that would clobber the
+// in-flight workspace. Standard numerical integration patterns never do this.
+
 //Forward Euler (Explicit Euler)
 template<typename State, typename DerivativeFunc>
 State euler_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
-    State deriv;
+    thread_local State deriv;
+    if (deriv.size() != state.size()) { deriv = state; }
+
     deriv_func(state, t, deriv);
-    
-    State next_state;
+
+    State next_state = state;
     for (size_t i = 0; i < state.size(); ++i) {
         next_state[i] = state[i] + dt * deriv[i];
     }
@@ -29,15 +50,16 @@ State euler_step(const State& state, double t, double dt, DerivativeFunc deriv_f
 //Heun's Method (Trapezoidal Rule)
 template<typename State, typename DerivativeFunc>
 State heun_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
-    State k1, k2, temp;
-    
+    thread_local State k1, k2, temp;
+    if (k1.size() != state.size()) { k1 = state; k2 = state; temp = state; }
+
     deriv_func(state, t, k1);
     for (size_t i = 0; i < state.size(); ++i) {
         temp[i] = state[i] + dt * k1[i];
     }
-    
+
     deriv_func(temp, t + dt, k2);
-    State next_state;
+    State next_state = state;
     for (size_t i = 0; i < state.size(); ++i) {
         next_state[i] = state[i] + 0.5 * dt * (k1[i] + k2[i]);
     }
@@ -60,27 +82,28 @@ State heun_step(const State& state, double t, double dt, DerivativeFunc deriv_fu
 // which essentially cancels out lower-order error terms.
 template<typename State, typename DerivativeFunc>
 State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
-    State k1, k2, k3, k4, temp;
-    
+    thread_local State k1, k2, k3, k4, temp;
+    if (k1.size() != state.size()) { k1 = state; k2 = state; k3 = state; k4 = state; temp = state; }
+
     // Stage 1: Derivative at the start
     deriv_func(state, t, k1);
     for (size_t i = 0; i < state.size(); ++i)
         temp[i] = state[i] + 0.5 * dt * k1[i];
-    
+
     // Stage 2: Derivative at midpoint (based on k1)
     deriv_func(temp, t + 0.5*dt, k2);
     for (size_t i = 0; i < state.size(); ++i)
         temp[i] = state[i] + 0.5 * dt * k2[i];
-    
+
     // Stage 3: Derivative at midpoint (based on k2)
-    // Note: We sample at the *same time* (t + 0.5*dt) as Stage 2. 
+    // Note: We sample at the *same time* (t + 0.5*dt) as Stage 2.
     // The difference is that we use k2 (the improved slope estimate) to reach this point, rather than k1.
     deriv_func(temp, t + 0.5*dt, k3);
     for (size_t i = 0; i < state.size(); ++i)
         temp[i] = state[i] + dt * k3[i];
-    
+
     // Stage 4: Derivative at end (based on k3)
-    // We estimate the state at the end of the interval (t + dt) by projecting 
+    // We estimate the state at the end of the interval (t + dt) by projecting
     // from the start using the refined midpoint slope (k3) across the full step dt.
     deriv_func(temp, t + dt, k4);
 
@@ -88,7 +111,7 @@ State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
     // We compute the true next state by taking a weighted average of the four slopes.
     // k1, k4 (endpoints) get weight 1.
     // k2, k3 (midpoints) get weight 2.
-    State next_state;
+    State next_state = state;
     for (size_t i = 0; i < state.size(); ++i) {
         next_state[i] = state[i] + (dt/6.0) * (k1[i] + 2*k2[i] + 2*k3[i] + k4[i]);
     }
@@ -178,7 +201,9 @@ namespace rk45_detail {
     // curvature of the function and are shared by both the 4th and 5th order solutions.
     template<typename State, typename DerivativeFunc>
     void compute_stages(const State& state, double t, double dt, DerivativeFunc deriv_func, State (&k)[7]) {
-        State temp;
+        thread_local State temp;
+        if (temp.size() != state.size()) { temp = state; }
+
         deriv_func(state, t, k[0]);
 
         for (int i = 1; i < 7; ++i) {
@@ -203,7 +228,9 @@ namespace rk45_detail {
 // fixed-step integrator, but with 5th-order accuracy (6 evaluations per step).
 template<typename State, typename DerivativeFunc>
 State rk45_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
-    State k[7];
+    thread_local State k[7];
+    if (k[0].size() != state.size()) { for (auto& ki : k) ki = state; }
+
     rk45_detail::compute_stages(state, t, dt, deriv_func, k);
 
     State next_state = state;
@@ -242,13 +269,19 @@ struct AdaptiveStepResult {
 // on straightaways (linear dynamics), ensuring efficiency and accuracy.
 template<typename State, typename DerivativeFunc>
 AdaptiveStepResult<State> rk45_adaptive_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
-    State k[7];
+    thread_local State k[7];
+    if (k[0].size() != state.size()) { for (auto& ki : k) ki = state; }
+
     rk45_detail::compute_stages(state, t, dt, deriv_func, k);
 
+    // Return-value members sized from the input state. `result.state` is then
+    // accumulated into by the 5th-order weighting loop below; `result.error`
+    // is explicitly zeroed first so the difference-coeffs loop accumulates
+    // cleanly.
     AdaptiveStepResult<State> result;
     result.state = state;
-    
-    // Initialize error with zeros
+    result.error = state;
+
     for(size_t s=0; s<state.size(); ++s) {
         result.error[s] = 0.0;
     }
@@ -354,9 +387,13 @@ State rk8_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
         -528747749.0/2220607170.0, 1.0/4.0
     };
     
-    State k[13];
-    State temp_state;
-    
+    thread_local State k[13];
+    thread_local State temp_state;
+    if (k[0].size() != state.size()) {
+        for (auto& ki : k) ki = state;
+        temp_state = state;
+    }
+
     // Stage 1
     deriv_func(state, t, k[0]);
     

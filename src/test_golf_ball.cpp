@@ -11,7 +11,7 @@
 #include "../include/golden_section.hpp"
 
 // Optimize angle for a given configuration and print results
-void run_optimization_case(std::string label, double v0, double k_over_m, DerivativeFuncPtr deriv_func) {
+void run_optimization_case(std::string label, double v0, double k_over_m, ProjectileDerivative deriv_func) {
     const double g = GRAVITY_EARTH;
     const double dt = 0.001; 
     const double h0 = 0.0;

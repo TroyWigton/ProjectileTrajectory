@@ -3,14 +3,25 @@
 
 #include "types.hpp"
 
-void drag_deriv_v_squared(const State4D& s, double t, State4D& deriv, double g, double k_over_m);
+// Problem-specific context bundle for projectile-motion derivatives.
+// Bundled into the generic ParameterizedDerivative<State, Context> signature
+// so the framework never sees projectile-specific parameters.
+struct ProjectileContext {
+    double g;        // gravitational acceleration (m/s^2)
+    double k_over_m; // drag coefficient ratio (k/m)
+};
 
-void drag_deriv_linear(const State4D& s, double t, State4D& deriv, double g, double k_over_m);
+// Convenience alias for the projectile-motion derivative signature.
+using ProjectileDerivative = ParameterizedDerivative<State4D, ProjectileContext>;
 
-void no_drag_deriv(const State4D& s, double t, State4D& deriv, double g, double k_over_m = 0.0);
+void drag_deriv_v_squared(const State4D& s, double t, State4D& deriv, const ProjectileContext& ctx);
 
-void golf_ball_drag_deriv(const State4D& s, double t, State4D& deriv, double g, double);
+void drag_deriv_linear(const State4D& s, double t, State4D& deriv, const ProjectileContext& ctx);
 
-void variable_drag_deriv(const State4D& s, double t, State4D& deriv, double g, double base_k_over_m);
+void no_drag_deriv(const State4D& s, double t, State4D& deriv, const ProjectileContext& ctx);
+
+void golf_ball_drag_deriv(const State4D& s, double t, State4D& deriv, const ProjectileContext& ctx);
+
+void variable_drag_deriv(const State4D& s, double t, State4D& deriv, const ProjectileContext& ctx);
 
 #endif // DERIVATIVE_FUNCTIONS_HPP

@@ -18,17 +18,18 @@
 Simulation::Simulation(double k_over_m,
                        SystemIntegrator<State4D> integrator,
                        double v0,
-                       DerivativeFuncPtr derivative,
+                       ProjectileDerivative derivative,
                        double g,
                        double h0)
     : g_(g),
       k_over_m_(k_over_m),
       v0_(v0),
       h0_(h0),
-      stepper_([integrator, derivative, g, k_over_m](const State4D& s, double t, double dt) -> State4D {
-        // Lambda to match SystemDerivative signature
-        auto bound_deriv = [derivative, g, k_over_m](const State4D& state, double time, State4D& out_d) {
-             derivative(state, time, out_d, g, k_over_m); 
+      stepper_([integrator, derivative, ctx = ProjectileContext{g, k_over_m}](const State4D& s, double t, double dt) -> State4D {
+        // Bind the ProjectileContext into a SystemDerivative<State4D>-shaped callable
+        // that the dimension-generic integrator expects.
+        auto bound_deriv = [derivative, &ctx](const State4D& state, double time, State4D& out_d) {
+             derivative(state, time, out_d, ctx);
         };
         return integrator(s, t, dt, bound_deriv);
     }) {

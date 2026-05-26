@@ -53,9 +53,10 @@ int main() {
         State4D state = {0.0, h0, v0 * std::cos(angle_rad), v0 * std::sin(angle_rad)};
         double t = 0.0;
         
-        // Lambda to bind parameters
-        auto bound_deriv = [&](const State4D& s, double time, State4D& out_d) {
-             drag_deriv_v_squared(s, time, out_d, g, k_over_m);
+        // Lambda to bind parameters via a ProjectileContext
+        ProjectileContext ctx{g, k_over_m};
+        auto bound_deriv = [&ctx](const State4D& s, double time, State4D& out_d) {
+             drag_deriv_v_squared(s, time, out_d, ctx);
         };
 
         long long steps = std::round(t_end / dt);

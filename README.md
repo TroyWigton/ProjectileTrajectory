@@ -50,7 +50,7 @@ Below are calculated `k_over_m` values for common objects, assuming standard sea
   - **Euler (1st Order)**: Basic forward stepping method used as a baseline. Simple but requires extremely small time steps for accuracy.
   - **Heun (2nd Order)**: Also known as the trapezoidal method. Offers improved stability over Euler.
   - **RK4 (4th Order)**: The classic Runge-Kutta method. Provides an excellent balance of speed and accuracy; used as the default engine.
-  - **RK45 (Dormand-Prince)**: An embedded 5(4) method that provides error estimation. Used for adaptive stepping (variable dt) or high-precision fixed stepping.
+  - **RK45 (Dormand-Prince)**: An embedded 5(4) method available in two variants — `rk45_step` (fixed dt, high-precision) and `rk45_adaptive_step` (returns an error estimate alongside the new state for step-size control). Both share the same 7-stage tableau.
   - **RK8 (8th Order)**: High-order method requiring 13 function evaluations per step. Extremely accurate, used as the "Ground Truth" for benchmarking other methods.
 - **Event Detection**: The main simulation loop terminates when the vertical position $y < 0$. To determine the exact impact location, the program performs a linear interpolation between the last state above ground and the current state below ground.
 
@@ -158,7 +158,7 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
 5. **Run Unit Tests**:
    Executes a suite of validation tests to ensure physics engine accuracy.
    - **Vacuum Test**: Verifies $\theta_{opt} \approx 45^\circ$ for all integrators when drag is zero.
-   - **Consistency Test**: Cross-references lower-order integrators (Euler, Heun) against the high-precision RK8 method to ensure results are within expected convergence limits under drag conditions.
+   - **Consistency Test**: Cross-references lower-order integrators (Euler, Heun, RK4) against the high-precision RK8 method to ensure results are within expected convergence limits under drag conditions.
    ```sh
    ./test
    ```
@@ -324,6 +324,30 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
      Angle Shift:     1.60 degrees (variable Cd - constant Cd)
    ```
 
+8. **Additional Executables**:
+
+   Three more programs ship in `build/` for specialized demonstrations:
+
+   - **`test_golf_ball`** — Compares optimal-angle trajectories under three golf-ball drag models: vacuum, constant-Cd v² drag, and velocity-dependent Cd that transitions from laminar to turbulent across the 18-25 m/s range.
+     ```sh
+     ./test_golf_ball
+     ```
+
+   - **`test_convergence`** — Empirical order-of-convergence test for the five fixed-step integrators. Runs each at progressively halved dt values against an ultra-precise RK8 reference and reports the error ratios and `log2(ratio)` empirical orders. Recovers theoretical orders 1, 2, 4, 5, 8 for Euler, Heun, RK4, RK45, and RK8 respectively (asymptotically, before the floating-point precision floor).
+     ```sh
+     ./test_convergence
+     ```
+
+   - **`test_adaptive`** — Demonstrates the adaptive RK45 integrator on a golf-ball trajectory at two error tolerances. Reports accepted/rejected step counts, achieved min/max dt range, and final flight distance.
+     ```sh
+     ./test_adaptive
+     ```
+
+   - **`example_3d_motion`** — Standalone 3D-projectile demo using the 6-DOF `State6D = [x, y, z, vx, vy, vz]`. Confirms that the integrator templates accept arbitrary state dimensions, not just the 4-DOF state used by the projectile motion code.
+     ```sh
+     ./example_3d_motion
+     ```
+
 ## Help
 
 If CMake is not available, you can compile the individual programs manually using a C++14 compiler.
@@ -351,6 +375,26 @@ clang++ -std=c++14 -O3 -I include -o compare_k_over_m src/compare_k_over_m.cpp s
 **Supersonic Variable Drag Analysis:**
 ```sh
 clang++ -std=c++14 -O3 -I include -o test_variable_drag_supersonic src/test_variable_drag_supersonic.cpp src/simulation.cpp src/derivative_functions.cpp
+```
+
+**Golf Ball Drag Transition Test:**
+```sh
+clang++ -std=c++14 -O3 -I include -o test_golf_ball src/test_golf_ball.cpp src/simulation.cpp src/derivative_functions.cpp
+```
+
+**Adaptive RK45 Demo:**
+```sh
+clang++ -std=c++14 -O3 -I include -o test_adaptive src/test_adaptive.cpp src/simulation.cpp src/derivative_functions.cpp
+```
+
+**Convergence Order Test:**
+```sh
+clang++ -std=c++14 -O3 -I include -o test_convergence src/test_convergence.cpp src/simulation.cpp src/derivative_functions.cpp
+```
+
+**3D Motion Demo:**
+```sh
+clang++ -std=c++14 -O3 -I include -o example_3d_motion src/example_3d_motion.cpp
 ```
 
 ## Authors

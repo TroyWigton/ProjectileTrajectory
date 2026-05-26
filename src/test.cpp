@@ -39,7 +39,7 @@ struct IntegratorInfo {
 // Define a struct to hold derivative function information
 struct DerivativeInfo {
     std::string name;
-    DerivativeFuncPtr func;
+    ProjectileDerivative func;
 };
 
 int main() {
