@@ -86,9 +86,9 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    cmake --build . -j
    ```
 
-3. **Run Main Simulation**:
+3. **Run the Optimal-Angle Search**:
    ```sh
-   ./main
+   ./optimal_angle_search
    ```
 
    **Sample Result**:
@@ -431,9 +431,9 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
 
 If CMake is not available, you can compile the individual programs manually using a C++14 compiler.
 
-**Main Simulation:**
+**Optimal-Angle Search:**
 ```sh
-clang++ -std=c++14 -O3 -I include -o main src/main.cpp src/simulation.cpp src/derivative_functions.cpp
+clang++ -std=c++14 -O3 -I include -o optimal_angle_search src/optimal_angle_search.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
 **Integrator Comparison:**

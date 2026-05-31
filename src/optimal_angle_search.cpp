@@ -1,6 +1,6 @@
 /**
- * @file main.cpp
- * @brief Main entry point for the Projectile Simulation application.
+ * @file optimal_angle_search.cpp
+ * @brief Finds the launch angle that maximizes projectile range (golden-section search).
  *
  * This program calculates the optimal launch angle for a projectile to achieve
  * maximum distance under the influence of atmospheric drag. It uses a Golden Section
