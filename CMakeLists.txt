@@ -19,6 +19,7 @@ add_executable(example_3d_motion src/example_3d_motion.cpp)
 add_executable(test_golf_ball src/test_golf_ball.cpp ${COMMON_SOURCES})
 add_executable(test_adaptive src/test_adaptive.cpp ${COMMON_SOURCES})
 add_executable(test_convergence src/test_convergence.cpp ${COMMON_SOURCES})
+add_executable(visualize_integration src/visualize_integration.cpp ${COMMON_SOURCES})
 
 # Include directories
 target_include_directories(main PRIVATE include)
@@ -30,3 +31,4 @@ target_include_directories(example_3d_motion PRIVATE include)
 target_include_directories(test_golf_ball PRIVATE include)
 target_include_directories(test_adaptive PRIVATE include)
 target_include_directories(test_convergence PRIVATE include)
+target_include_directories(visualize_integration PRIVATE include)

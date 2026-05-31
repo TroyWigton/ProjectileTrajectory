@@ -427,6 +427,28 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
      ./example_3d_motion
      ```
 
+10. **Integration Visualization (Data + Notebook)**:
+   Generates CSV datasets and renders them in a Jupyter notebook that shows, visually, how
+   integration error depends on step size and method order — and how a Runge-Kutta method's
+   intermediate "minor step" slope samples combine into a more accurate "major step" estimate.
+
+   `visualize_integration` writes seven CSVs to `viz_data/` using the project's own integrators;
+   `integration_visualization.ipynb` reads them and plots.
+   ```sh
+   # from the repo root:
+   mkdir -p viz_data && ./build/visualize_integration viz_data
+   ```
+   The notebook covers: (1) one method (Euler) at shrinking Δt converging to truth; (2) different
+   integrators at the *same* Δt, with a landing-region zoom (the high-order methods are graphically
+   identical on the path — only the log plots tell them apart); (3) error-vs-time growth and a
+   log-log order-of-accuracy plot whose asymptotic slopes approach each method's order (1, 2, 4, 5,
+   8; RK45 super-converges), with the coarse-Δt curve crossing and the round-off floor made
+   explicit; and (4) a per-step **stage decomposition** on a sample ODE (y′ = y, true solution eᵗ)
+   showing how Euler/Heun/RK4 sample the derivative at their major/minor points and blend those
+   slopes into the more accurate major-step derivative. The C++ logger reconstructs the stages
+   explicitly and asserts the reconstructed end-of-step state equals the canonical `*_step()`
+   output, so the plots reflect exactly what the integrators compute.
+
 ## Help
 
 If CMake is not available, you can compile the individual programs manually using a C++14 compiler.
@@ -474,6 +496,11 @@ clang++ -std=c++14 -O3 -I include -o test_convergence src/test_convergence.cpp s
 **3D Motion Demo:**
 ```sh
 clang++ -std=c++14 -O3 -I include -o example_3d_motion src/example_3d_motion.cpp
+```
+
+**Integration Visualization:**
+```sh
+clang++ -std=c++14 -O3 -I include -o visualize_integration src/visualize_integration.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
 ## Authors

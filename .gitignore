@@ -36,6 +36,9 @@
 build/
 bin/
 
+# Generated visualization data (produced by ./build/visualize_integration)
+viz_data/
+
 # Documentation
 docs/
 
