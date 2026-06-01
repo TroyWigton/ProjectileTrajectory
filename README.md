@@ -14,14 +14,13 @@ Compute the optimal launch angle for a projectile to achieve the furthest horizo
 - [Executables](#executables)
   - [optimal_angle_search](#optimal_angle_search)
   - [compare_integrators](#compare_integrators)
-  - [test](#test)
   - [convergence_study](#convergence_study)
   - [compare_k_over_m](#compare_k_over_m)
   - [mach_drag_study](#mach_drag_study)
   - [golf_ball_drag_study](#golf_ball_drag_study)
   - [demo_rk45_adaptive](#demo_rk45_adaptive)
   - [example_3d_motion](#example_3d_motion)
-  - [visualize_integration](#visualize_integration)
+- [Validation and Testing](#validation-and-testing)
 - [Manual Compilation](#manual-compilation)
 - [Authors](#authors)
 - [Version History](#version-history)
@@ -201,97 +200,6 @@ Heun           14309          0.00139772     9.88e-04            0.469
 RK4            1787           0.0111919      9.88e-04            0.109
 RK45           1568           0.0127551      9.48e-04            0.145
 RK8            429            0.04662        9.83e-04            0.083
-```
-
-</details>
-
-### test
-
-Executes a suite of validation tests to ensure physics engine accuracy.
-- **Vacuum Test**: Verifies $\theta_{opt} \approx 45^\circ$ for all integrators when drag is zero.
-- **Consistency Test**: Cross-references lower-order integrators (Euler, Heun, RK4) against the high-precision RK8 method to ensure results are within expected convergence limits under drag conditions.
-
-```sh
-./test
-```
-
-<details>
-<summary>Sample output</summary>
-
-```
-Starting Test Suite: Vacuum Trajectory Optimization
-Target Angle: 45 degrees
-Tolerance: 0.05 degrees
-k/m: 0
-
-Testing Integrator: Euler, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9998)
-Testing Integrator: Euler, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9998)
-Testing Integrator: Euler, Derivative: No Drag... PASSED (Optimal Angle: 44.9998)
-Testing Integrator: Heun, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9999)
-Testing Integrator: Heun, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9999)
-Testing Integrator: Heun, Derivative: No Drag... PASSED (Optimal Angle: 44.9999)
-Testing Integrator: RK4, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9999)
-Testing Integrator: RK4, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9999)
-Testing Integrator: RK4, Derivative: No Drag... PASSED (Optimal Angle: 44.9999)
-Testing Integrator: RK8, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9999)
-Testing Integrator: RK8, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9999)
-Testing Integrator: RK8, Derivative: No Drag... PASSED (Optimal Angle: 44.9999)
-
---------------------------------------------------
-Starting Test Suite: Integrator Consistency (Non-zero Drag)
-k/m: 0.0057
-
-Evaluating Derivative Function: V Squared Drag
-      Euler: Angle = 34.7324, Distance = 246.264
-      Heun: Angle = 34.7358, Distance = 246.275
-         RK4: Angle = 34.7358, Distance = 246.275
-         RK8: Angle = 34.7358, Distance = 246.275
--> Consistency Check (Euler vs RK8): PASSED
-   (Diffs - Angle: 0.00343658, Dist: 0.0109617)
--> Consistency Check (Heun vs RK8): PASSED
-   (Diffs - Angle: 0, Dist: 3.66264e-08)
--> Consistency Check (RK4 vs RK8): PASSED
-   (Diffs - Angle: 0, Dist: 9.37916e-13)
-
-Evaluating Derivative Function: Linear Drag
-      Euler: Angle = 44.2345, Distance = 966.492
-      Heun: Angle = 44.2359, Distance = 966.425
-         RK4: Angle = 44.2359, Distance = 966.425
-         RK8: Angle = 44.2359, Distance = 966.425
--> Consistency Check (Euler vs RK8): PASSED
-   (Diffs - Angle: 0.00141116, Dist: 0.0670337)
--> Consistency Check (Heun vs RK8): PASSED
-   (Diffs - Angle: 0, Dist: 1.27375e-07)
--> Consistency Check (RK4 vs RK8): PASSED
-   (Diffs - Angle: 0, Dist: 1.80762e-11)
-
---------------------------------------------------
-Starting Test Suite: Vacuum Trajectory with Height (No Drag)
-Launch Height h0: 100 m
-Initial Velocity v0: 100 m/s
-Gravity g: 9.81 m/s^2
-Theoretical Optimal Angle: 42.4373 degrees
-Experimental Optimal Angle: 42.4377 degrees
-PASSED (Difference: 0.000363027)
-Theoretical Max Distance: 1114.89 m
-Experimental Max Distance: 1114.89 m
-Distance Check: PASSED (Difference: 1.02653e-06)
-
---------------------------------------------------
-Starting Test Suite: V Squared Drag Trajectory with Variable Height
-Parameters: v0 = 100 m/s, k/m = 0.0057 (Golf Ball)
-Hypothesis: As launch height increases, optimal angle should decrease.
-
-Height (m) Optimal Angle (deg)    Max Distance (m)
---------------------------------------------------
-         0             34.7358             246.275
-      50             29.3616             269.451
-      100              25.285             286.965
-      200             19.7593             310.601
-      500             13.4513              337.36
-Trend verification: PASSED
-
-All tests passed successfully!
 ```
 
 </details>
@@ -509,13 +417,96 @@ Standalone 3D-projectile demo using the 6-DOF `State6D = [x, y, z, vx, vy, vz]`.
 ./example_3d_motion
 ```
 
-### visualize_integration
+## Validation and Testing
 
-Emits CSV datasets to `viz_data/` (step-size study, integrator comparison, error-vs-time, convergence, and a per-stage Runge-Kutta decomposition on a 1-D sample ODE `y'=y`) consumed by `integration_visualization.ipynb`. The stage-decomposition logging reconstructs the Euler/Heun/RK4 stages explicitly and asserts the reconstructed endpoint matches the canonical `*_step()` output, so logged stages are guaranteed faithful. Run from the repo root:
+The `test` executable runs a suite of validation tests to ensure physics-engine accuracy.
+- **Vacuum Test**: Verifies $\theta_{opt} \approx 45^\circ$ for all integrators when drag is zero.
+- **Consistency Test**: Cross-references lower-order integrators (Euler, Heun, RK4) against the high-precision RK8 method to ensure results are within expected convergence limits under drag conditions.
 
 ```sh
-mkdir -p viz_data && ./build/visualize_integration viz_data
+./test
 ```
+
+<details>
+<summary>Sample output</summary>
+
+```
+Starting Test Suite: Vacuum Trajectory Optimization
+Target Angle: 45 degrees
+Tolerance: 0.05 degrees
+k/m: 0
+
+Testing Integrator: Euler, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9998)
+Testing Integrator: Euler, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9998)
+Testing Integrator: Euler, Derivative: No Drag... PASSED (Optimal Angle: 44.9998)
+Testing Integrator: Heun, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9999)
+Testing Integrator: Heun, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9999)
+Testing Integrator: Heun, Derivative: No Drag... PASSED (Optimal Angle: 44.9999)
+Testing Integrator: RK4, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9999)
+Testing Integrator: RK4, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9999)
+Testing Integrator: RK4, Derivative: No Drag... PASSED (Optimal Angle: 44.9999)
+Testing Integrator: RK8, Derivative: V Squared Drag... PASSED (Optimal Angle: 44.9999)
+Testing Integrator: RK8, Derivative: Linear Drag... PASSED (Optimal Angle: 44.9999)
+Testing Integrator: RK8, Derivative: No Drag... PASSED (Optimal Angle: 44.9999)
+
+--------------------------------------------------
+Starting Test Suite: Integrator Consistency (Non-zero Drag)
+k/m: 0.0057
+
+Evaluating Derivative Function: V Squared Drag
+      Euler: Angle = 34.7324, Distance = 246.264
+      Heun: Angle = 34.7358, Distance = 246.275
+         RK4: Angle = 34.7358, Distance = 246.275
+         RK8: Angle = 34.7358, Distance = 246.275
+-> Consistency Check (Euler vs RK8): PASSED
+   (Diffs - Angle: 0.00343658, Dist: 0.0109617)
+-> Consistency Check (Heun vs RK8): PASSED
+   (Diffs - Angle: 0, Dist: 3.66264e-08)
+-> Consistency Check (RK4 vs RK8): PASSED
+   (Diffs - Angle: 0, Dist: 9.37916e-13)
+
+Evaluating Derivative Function: Linear Drag
+      Euler: Angle = 44.2345, Distance = 966.492
+      Heun: Angle = 44.2359, Distance = 966.425
+         RK4: Angle = 44.2359, Distance = 966.425
+         RK8: Angle = 44.2359, Distance = 966.425
+-> Consistency Check (Euler vs RK8): PASSED
+   (Diffs - Angle: 0.00141116, Dist: 0.0670337)
+-> Consistency Check (Heun vs RK8): PASSED
+   (Diffs - Angle: 0, Dist: 1.27375e-07)
+-> Consistency Check (RK4 vs RK8): PASSED
+   (Diffs - Angle: 0, Dist: 1.80762e-11)
+
+--------------------------------------------------
+Starting Test Suite: Vacuum Trajectory with Height (No Drag)
+Launch Height h0: 100 m
+Initial Velocity v0: 100 m/s
+Gravity g: 9.81 m/s^2
+Theoretical Optimal Angle: 42.4373 degrees
+Experimental Optimal Angle: 42.4377 degrees
+PASSED (Difference: 0.000363027)
+Theoretical Max Distance: 1114.89 m
+Experimental Max Distance: 1114.89 m
+Distance Check: PASSED (Difference: 1.02653e-06)
+
+--------------------------------------------------
+Starting Test Suite: V Squared Drag Trajectory with Variable Height
+Parameters: v0 = 100 m/s, k/m = 0.0057 (Golf Ball)
+Hypothesis: As launch height increases, optimal angle should decrease.
+
+Height (m) Optimal Angle (deg)    Max Distance (m)
+--------------------------------------------------
+         0             34.7358             246.275
+      50             29.3616             269.451
+      100              25.285             286.965
+      200             19.7593             310.601
+      500             13.4513              337.36
+Trend verification: PASSED
+
+All tests passed successfully!
+```
+
+</details>
 
 ## Manual Compilation
 
