@@ -1,5 +1,5 @@
 /**
- * @file test_variable_drag_supersonic.cpp
+ * @file mach_drag_study.cpp
  * @brief Compare constant-Cd vs variable-Cd (Mach-dependent) drag on a supersonic projectile.
  *
  * Evaluates the impact of the transonic drag rise and supersonic fade on a high-velocity

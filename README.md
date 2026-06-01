@@ -292,11 +292,11 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
       0.20000                 23.42878            16.35945
       ```
 
-7. **Run Supersonic Variable Drag Test**:
+7. **Run the Supersonic Drag Study**:
    Evaluates the impact of Mach-dependent drag (transonic wave drag with supersonic fade) on a high-velocity projectile (.223 Remington, ~Mach 2.84 at the muzzle).
    It compares a vacuum baseline, a v^2 drag model with constant $C_d$, and a v^2 drag model with variable $C_d$ that rises through the transonic regime and fades back at higher Mach.
    ```sh
-   ./test_variable_drag_supersonic
+   ./mach_drag_study
    ```
    **Sample Result**:
    ```
@@ -324,7 +324,7 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
      Angle Shift:     1.60 degrees (variable Cd - constant Cd)
    ```
 
-8. **Run Convergence Order Test**:
+8. **Run the Convergence Study**:
    Measures the empirical order of convergence for each fixed-step integrator.
    For each method, the same smooth v² drag projectile is integrated to a fixed
    t=T at progressively halved dt values; the global position error at t=T is
@@ -333,7 +333,7 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
    For a method of theoretical order $p$, the empirical order should approach
    $p$ until the error reaches the floating-point precision floor.
    ```sh
-   ./test_convergence
+   ./convergence_study
    ```
 
    **Sample Result**:
@@ -412,14 +412,14 @@ To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}
 
    Three more programs ship in `build/` for specialized demonstrations:
 
-   - **`test_golf_ball`** — Compares optimal-angle trajectories under three golf-ball drag models: vacuum, constant-Cd v² drag, and velocity-dependent Cd that transitions from laminar to turbulent across the 18-25 m/s range.
+   - **`golf_ball_drag_study`** — Compares optimal-angle trajectories under three golf-ball drag models: vacuum, constant-Cd v² drag, and velocity-dependent Cd that transitions from laminar to turbulent across the 18-25 m/s range.
      ```sh
-     ./test_golf_ball
+     ./golf_ball_drag_study
      ```
 
-   - **`test_adaptive`** — Demonstrates the adaptive RK45 integrator on a golf-ball trajectory at two error tolerances. Reports accepted/rejected step counts, achieved min/max dt range, and final flight distance.
+   - **`demo_rk45_adaptive`** — Demonstrates the adaptive RK45 integrator on a golf-ball trajectory at two error tolerances. Reports accepted/rejected step counts, achieved min/max dt range, and final flight distance.
      ```sh
-     ./test_adaptive
+     ./demo_rk45_adaptive
      ```
 
    - **`example_3d_motion`** — Standalone 3D-projectile demo using the 6-DOF `State6D = [x, y, z, vx, vy, vz]`. Confirms that the integrator templates accept arbitrary state dimensions, not just the 4-DOF state used by the projectile motion code.
@@ -451,24 +451,24 @@ clang++ -std=c++14 -O3 -I include -o test src/test.cpp src/simulation.cpp src/de
 clang++ -std=c++14 -O3 -I include -o compare_k_over_m src/compare_k_over_m.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
-**Supersonic Variable Drag Analysis:**
+**Supersonic Drag Study:**
 ```sh
-clang++ -std=c++14 -O3 -I include -o test_variable_drag_supersonic src/test_variable_drag_supersonic.cpp src/simulation.cpp src/derivative_functions.cpp
+clang++ -std=c++14 -O3 -I include -o mach_drag_study src/mach_drag_study.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
-**Golf Ball Drag Transition Test:**
+**Golf Ball Drag Study:**
 ```sh
-clang++ -std=c++14 -O3 -I include -o test_golf_ball src/test_golf_ball.cpp src/simulation.cpp src/derivative_functions.cpp
+clang++ -std=c++14 -O3 -I include -o golf_ball_drag_study src/golf_ball_drag_study.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
 **Adaptive RK45 Demo:**
 ```sh
-clang++ -std=c++14 -O3 -I include -o test_adaptive src/test_adaptive.cpp src/simulation.cpp src/derivative_functions.cpp
+clang++ -std=c++14 -O3 -I include -o demo_rk45_adaptive src/demo_rk45_adaptive.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
-**Convergence Order Test:**
+**Convergence Study:**
 ```sh
-clang++ -std=c++14 -O3 -I include -o test_convergence src/test_convergence.cpp src/simulation.cpp src/derivative_functions.cpp
+clang++ -std=c++14 -O3 -I include -o convergence_study src/convergence_study.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
 **3D Motion Demo:**

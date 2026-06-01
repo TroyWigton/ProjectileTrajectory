@@ -1,5 +1,5 @@
 /**
- * @file test_adaptive.cpp
+ * @file demo_rk45_adaptive.cpp
  * @brief Demonstration of adaptive Runge-Kutta 4/5 integration.
  *
  * This program runs a simulation of a golf ball trajectory using the RK45 adaptive
