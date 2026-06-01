@@ -2,6 +2,7 @@
 #define INTEGRATORS_HPP
 
 #include <array>
+#include <cstddef>
 #include <functional>
 
 // Represents system dynamics (dy/dt = f(t, y)). Calculates the rate of change for the current state.
@@ -40,7 +41,7 @@ State euler_step(const State& state, double t, double dt, DerivativeFunc deriv_f
     deriv_func(state, t, deriv);
 
     State next_state = state;
-    for (size_t i = 0; i < state.size(); ++i) {
+    for (std::size_t i = 0; i < state.size(); ++i) {
         next_state[i] = state[i] + dt * deriv[i];
     }
     return next_state;
@@ -54,13 +55,13 @@ State heun_step(const State& state, double t, double dt, DerivativeFunc deriv_fu
     if (k1.size() != state.size()) { k1 = state; k2 = state; temp = state; }
 
     deriv_func(state, t, k1);
-    for (size_t i = 0; i < state.size(); ++i) {
+    for (std::size_t i = 0; i < state.size(); ++i) {
         temp[i] = state[i] + dt * k1[i];
     }
 
     deriv_func(temp, t + dt, k2);
     State next_state = state;
-    for (size_t i = 0; i < state.size(); ++i) {
+    for (std::size_t i = 0; i < state.size(); ++i) {
         next_state[i] = state[i] + 0.5 * dt * (k1[i] + k2[i]);
     }
     return next_state;
@@ -87,19 +88,19 @@ State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
 
     // Stage 1: Derivative at the start
     deriv_func(state, t, k1);
-    for (size_t i = 0; i < state.size(); ++i)
+    for (std::size_t i = 0; i < state.size(); ++i)
         temp[i] = state[i] + 0.5 * dt * k1[i];
 
     // Stage 2: Derivative at midpoint (based on k1)
     deriv_func(temp, t + 0.5*dt, k2);
-    for (size_t i = 0; i < state.size(); ++i)
+    for (std::size_t i = 0; i < state.size(); ++i)
         temp[i] = state[i] + 0.5 * dt * k2[i];
 
     // Stage 3: Derivative at midpoint (based on k2)
     // Note: We sample at the *same time* (t + 0.5*dt) as Stage 2.
     // The difference is that we use k2 (the improved slope estimate) to reach this point, rather than k1.
     deriv_func(temp, t + 0.5*dt, k3);
-    for (size_t i = 0; i < state.size(); ++i)
+    for (std::size_t i = 0; i < state.size(); ++i)
         temp[i] = state[i] + dt * k3[i];
 
     // Stage 4: Derivative at end (based on k3)
@@ -112,7 +113,7 @@ State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
     // k1, k4 (endpoints) get weight 1.
     // k2, k3 (midpoints) get weight 2.
     State next_state = state;
-    for (size_t i = 0; i < state.size(); ++i) {
+    for (std::size_t i = 0; i < state.size(); ++i) {
         next_state[i] = state[i] + (dt/6.0) * (k1[i] + 2*k2[i] + 2*k3[i] + k4[i]);
     }
     return next_state;
@@ -211,7 +212,7 @@ namespace rk45_detail {
             for (int j = 0; j < i; ++j) {
                 // Determine if a[i][j] is effectively non-zero to avoid unnecessary FLOPs
                 if (a[i][j] != 0.0) {
-                    for (size_t s = 0; s < state.size(); ++s) {
+                    for (std::size_t s = 0; s < state.size(); ++s) {
                         temp[s] += dt * a[i][j] * k[j][s];
                     }
                 }
@@ -234,7 +235,7 @@ State rk45_step(const State& state, double t, double dt, DerivativeFunc deriv_fu
     rk45_detail::compute_stages(state, t, dt, deriv_func, k);
 
     State next_state = state;
-    for (size_t s = 0; s < state.size(); ++s) {
+    for (std::size_t s = 0; s < state.size(); ++s) {
         for (int i = 0; i < 7; ++i) {
             // b5[i] are the weights for the 5th order solution
             if (rk45_detail::b5[i] != 0.0) {
@@ -282,12 +283,12 @@ AdaptiveStepResult<State> rk45_adaptive_step(const State& state, double t, doubl
     result.state = state;
     result.error = state;
 
-    for(size_t s=0; s<state.size(); ++s) {
+    for(std::size_t s=0; s<state.size(); ++s) {
         result.error[s] = 0.0;
     }
 
     // Combine results to calculate state update and error estimate
-    for (size_t s = 0; s < state.size(); ++s) {
+    for (std::size_t s = 0; s < state.size(); ++s) {
         for (int i = 0; i < 7; ++i) {
             // Accumulate 5th order solution
             if (rk45_detail::b5[i] != 0.0) {
@@ -401,7 +402,7 @@ State rk8_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
     for (int stage = 1; stage < 13; ++stage) {
         temp_state = state;
         for (int j = 0; j < stage; ++j) {
-            for (size_t i = 0; i < state.size(); ++i) {
+            for (std::size_t i = 0; i < state.size(); ++i) {
                 temp_state[i] += dt * a[stage][j] * k[j][i];
             }
         }
@@ -411,7 +412,7 @@ State rk8_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
     // Combine stages for 8th order solution
     State next_state = state;
     for (int stage = 0; stage < 13; ++stage) {
-        for (size_t i = 0; i < state.size(); ++i) {
+        for (std::size_t i = 0; i < state.size(); ++i) {
             next_state[i] += dt * b8[stage] * k[stage][i];
         }
     }

@@ -1,3 +1,10 @@
+#ifndef GOLDEN_SECTION_HPP
+#define GOLDEN_SECTION_HPP
+
+#include <iostream>   // std::cout (verbose tracing)
+#include <stdexcept>  // std::invalid_argument
+#include <cmath>      // std::isfinite
+
 // Modified golden-section search for maximization
 template<typename Func>
 double golden_section_search_max(Func f, double a, double b, double tol, bool verbose = false) {
@@ -67,3 +74,5 @@ double golden_section_search_max(Func f, double a, double b, double tol, bool ve
     }
     return optimal;
 }
+
+#endif // GOLDEN_SECTION_HPP
