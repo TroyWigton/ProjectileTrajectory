@@ -195,11 +195,11 @@ Performance Comparison: Steps, dt, error, and wall-clock runtime to meet target 
 --------------------------------------------------------------------------------------------
 Integrator     Steps          dt (s)         Final Error (m)     Runtime (ms)
 --------------------------------------------------------------------------------------------
-Euler          2156009        9.2764e-06     9.99e-04            35.049
-Heun           14309          0.00139772     9.88e-04            0.469
-RK4            1787           0.0111919      9.88e-04            0.109
-RK45           1568           0.0127551      9.48e-04            0.145
-RK8            429            0.04662        9.83e-04            0.083
+Euler          2156009        9.2764e-06     9.99e-04            50.722
+Heun           14309          0.00139772     9.88e-04            0.682
+RK4            1787           0.0111919      9.88e-04            0.157
+RK45           1568           0.0127551      9.48e-04            0.205
+RK8            429            0.04662        9.83e-04            0.120
 ```
 
 </details>
@@ -230,6 +230,12 @@ Test problem (smooth v^2 drag):
   k/m          = 0.0057 (golf ball)
   duration T   = 5 s
 Reference: RK8 at dt = 1e-06 (truth = (176.396, 88.2665) m)
+
+Each integrator is run at progressively halved dt values; the
+global position error at t=T is computed against the reference.
+Empirical order = log2(error_prev / error_curr). For an order-p
+method, the empirical order should approach p until the error
+reaches the floating-point precision floor (~1e-13).
 
 ------------------------------------------------------------
 Euler (theoretical order 1)
@@ -401,6 +407,24 @@ Compares optimal-angle trajectories under three golf-ball drag models: vacuum, c
 ./golf_ball_drag_study
 ```
 
+<details>
+<summary>Sample output</summary>
+
+```
+Golf Ball Trajectory Optimization (v0=70 m/s ~ 156 mph ball speed)
+------------------------------------------------------------------------
+Cd model parameters:
+  Constant Cd: 0.4125  (mean of laminar=0.550 and turbulent=0.275)
+  Variable Cd: 0.550 (laminar, v < 18.0 m/s) -> 0.275 (turbulent, v >= 25.0 m/s)
+               with linear transition between 18.0 and 25.0 m/s
+------------------------------------------------------------------------
+1. Vacuum                  Optimal Angle: 44.9987 deg | Max Distance: 499.490 m
+2. v^2 drag, constant Cd   Optimal Angle: 36.2675 deg | Max Distance: 153.276 m
+3. v^2 drag, variable Cd   Optimal Angle: 37.8064 deg | Max Distance: 192.229 m
+```
+
+</details>
+
 ### demo_rk45_adaptive
 
 Demonstrates the adaptive RK45 integrator on a golf-ball trajectory at two error tolerances. Reports accepted/rejected step counts, achieved min/max dt range, and final flight distance.
@@ -416,6 +440,19 @@ Standalone 3D-projectile demo using the 6-DOF `State6D = [x, y, z, vx, vy, vz]`.
 ```sh
 ./example_3d_motion
 ```
+
+<details>
+<summary>Sample output</summary>
+
+```
+Running 3D Projectile Simulation (6-DOF State)...
+Drag (k/m): 0.005
+t=1.0000 x=56.7092 y=53.2586 z=9.9994 v=61.9955
+t=2.0000 x=97.8509 y=83.3161 z=17.2538 v=42.8891
+Impact at t=9.0200 x=253.9047 y=-0.2314 z=44.7703
+```
+
+</details>
 
 ## Validation and Testing
 
@@ -454,28 +491,28 @@ Starting Test Suite: Integrator Consistency (Non-zero Drag)
 k/m: 0.0057
 
 Evaluating Derivative Function: V Squared Drag
-      Euler: Angle = 34.7324, Distance = 246.264
-      Heun: Angle = 34.7358, Distance = 246.275
+       Euler: Angle = 34.7324, Distance = 246.264
+        Heun: Angle = 34.7358, Distance = 246.275
          RK4: Angle = 34.7358, Distance = 246.275
          RK8: Angle = 34.7358, Distance = 246.275
--> Consistency Check (Euler vs RK8): PASSED
-   (Diffs - Angle: 0.00343658, Dist: 0.0109617)
--> Consistency Check (Heun vs RK8): PASSED
-   (Diffs - Angle: 0, Dist: 3.66264e-08)
--> Consistency Check (RK4 vs RK8): PASSED
-   (Diffs - Angle: 0, Dist: 9.37916e-13)
+  -> Consistency Check (Euler vs RK8): PASSED
+     (Diffs - Angle: 0.00343658, Dist: 0.0109617)
+  -> Consistency Check (Heun vs RK8): PASSED
+     (Diffs - Angle: 0, Dist: 3.66264e-08)
+  -> Consistency Check (RK4 vs RK8): PASSED
+     (Diffs - Angle: 0, Dist: 9.37916e-13)
 
 Evaluating Derivative Function: Linear Drag
-      Euler: Angle = 44.2345, Distance = 966.492
-      Heun: Angle = 44.2359, Distance = 966.425
+       Euler: Angle = 44.2345, Distance = 966.492
+        Heun: Angle = 44.2359, Distance = 966.425
          RK4: Angle = 44.2359, Distance = 966.425
          RK8: Angle = 44.2359, Distance = 966.425
--> Consistency Check (Euler vs RK8): PASSED
-   (Diffs - Angle: 0.00141116, Dist: 0.0670337)
--> Consistency Check (Heun vs RK8): PASSED
-   (Diffs - Angle: 0, Dist: 1.27375e-07)
--> Consistency Check (RK4 vs RK8): PASSED
-   (Diffs - Angle: 0, Dist: 1.80762e-11)
+  -> Consistency Check (Euler vs RK8): PASSED
+     (Diffs - Angle: 0.00141116, Dist: 0.0670337)
+  -> Consistency Check (Heun vs RK8): PASSED
+     (Diffs - Angle: 0, Dist: 1.27375e-07)
+  -> Consistency Check (RK4 vs RK8): PASSED
+     (Diffs - Angle: 0, Dist: 1.80762e-11)
 
 --------------------------------------------------
 Starting Test Suite: Vacuum Trajectory with Height (No Drag)
@@ -497,10 +534,10 @@ Hypothesis: As launch height increases, optimal angle should decrease.
 Height (m) Optimal Angle (deg)    Max Distance (m)
 --------------------------------------------------
          0             34.7358             246.275
-      50             29.3616             269.451
-      100              25.285             286.965
-      200             19.7593             310.601
-      500             13.4513              337.36
+        50             29.3616             269.451
+       100              25.285             286.965
+       200             19.7593             310.601
+       500             13.4513              337.36
 Trend verification: PASSED
 
 All tests passed successfully!
