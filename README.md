@@ -427,11 +427,81 @@ Cd model parameters:
 
 ### demo_rk45_adaptive
 
-Demonstrates the adaptive RK45 integrator on a golf-ball trajectory at two error tolerances. Reports accepted/rejected step counts, achieved min/max dt range, and final flight distance.
+Shows how adaptive RK45 step-size control concentrates work where the dynamics are hard. A ping-pong ball (very high drag) is launched at high speed under smooth v² drag: the opening is violent (drag ∝ v², so the ball sheds speed at hundreds of m/s²) and demands a small `dt`, while the slow terminal-velocity tail is gentle and lets `dt` grow ~60×. A per-step trace shows `dt` and the embedded error estimate reacting to the speed, and a head-to-head reports how many fixed-step RK45 steps (same method, same order) are needed to match the adaptive run's accuracy — adaptive wins ~10× because a uniform `dt` must stay small everywhere just to survive the launch.
 
 ```sh
 ./demo_rk45_adaptive
 ```
+
+<details>
+<summary>Sample output</summary>
+
+```
+=== Adaptive RK45 Demo: High-Speed Ping-Pong Ball (smooth v^2 drag) ===
+
+Scenario: ping-pong ball (k/m = 0.134), v0 = 200 m/s, launch 45 deg, smooth v^2 drag.
+Integrated to t = 3 s. Drag accel ~ v^2, so the launch
+is violent (small dt) and the slow terminal-velocity tail is gentle (large dt).
+
+--- Per-step trace (tol = 1e-04) ---
+ step   t(s)    dt(s)      v(m/s)    err est    result
+ --------------------------------------------------------------------
+    1   0.000  1.00e-02    200.00   1.24e-03   REJECT
+    2   0.000  5.00e-03    200.00   4.64e-05   accept
+    3   0.005  5.25e-03    176.34   2.82e-05   accept
+    4   0.010  6.08e-03    156.85   2.91e-05   accept
+    5   0.016  7.01e-03    139.03   2.85e-05   accept
+    6   0.023  8.11e-03    122.93   2.81e-05   accept
+    7   0.031  9.40e-03    108.40   2.77e-05   accept
+    8   0.041  1.09e-02     95.32   2.72e-05   accept
+    9   0.052  1.28e-02     83.56   2.67e-05   accept
+   10   0.065  1.50e-02     73.03   2.62e-05   accept
+   11   0.080  1.76e-02     63.60   2.57e-05   accept
+   12   0.097  2.08e-02     55.20   2.52e-05   accept
+   13   0.118  2.47e-02     47.72   2.46e-05   accept
+   14   0.143  2.94e-02     41.07   2.41e-05   accept
+   15   0.172  3.51e-02     35.18   2.34e-05   accept
+   16   0.207  4.23e-02     29.98   2.28e-05   accept
+   17   0.249  5.11e-02     25.38   2.20e-05   accept
+   18   0.301  6.23e-02     21.33   2.12e-05   accept
+   19   0.363  7.65e-02     17.76   2.02e-05   accept
+   20   0.439  9.47e-02     14.62   1.90e-05   accept
+   21   0.534  1.19e-01     11.86   1.74e-05   accept
+   22   0.653  1.52e-01      9.44   1.59e-05   accept
+   23   0.805  1.97e-01      7.38   1.92e-05   accept
+   24   1.002  2.47e-01      5.83   1.80e-05   accept
+   25   1.249  3.13e-01      5.22   2.08e-05   accept
+   26   1.562  3.86e-01      5.75   2.30e-04   REJECT
+   27   1.562  1.93e-01      5.75   5.23e-06   accept
+   28   1.755  3.13e-01      6.32   1.06e-04   REJECT
+   29   1.755  1.57e-01      6.32   2.62e-06   accept
+   30   1.912  2.92e-01      6.78   8.27e-05   accept
+   31   2.204  2.73e-01      7.46   5.58e-05   accept
+   32   2.477  2.76e-01      7.89   4.61e-05   accept
+   33   2.753  2.47e-01      8.16   1.75e-05   accept
+ --------------------------------------------------------------------
+Accepted steps: 30    Rejected steps: 3
+Smallest step:  5.00e-03 s  (at t = 0.00 s, v = 200.00 m/s)
+Largest step:   3.13e-01 s
+
+--- Why adaptive? Steps needed to reach a given accuracy at t = 3 s ---
+Reference (RK8, dt = 1e-4): x = 23.7424 m, y = 4.0576 m
+
+    tol      adaptive steps (acc+rej)   adaptive err (m)   fixed RK45 steps for same err
+  --------------------------------------------------------------------------------------
+    1e-03      25 (22+3)            1.57e-03              219
+    1e-05      47 (44+3)            9.42e-06              462
+    1e-07      102 (101+1)          3.92e-08             1079
+
+The fixed-step count is dominated by the violent launch: a uniform dt must be
+small enough for the first milliseconds at v0, then wastes that resolution over
+the entire calm tail. Adaptive spends its small steps only at the start and
+strides through the terminal-velocity descent -- here a ~10x step saving that
+widens as the accuracy target tightens. (The adaptive count includes rejected
+attempts, which also cost evaluations.)
+```
+
+</details>
 
 ### example_3d_motion
 
