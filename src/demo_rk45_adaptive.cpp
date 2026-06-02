@@ -261,12 +261,16 @@ int main() {
         else                  std::cout << "(> 2^28)";
         std::cout << "\n";
     }
-    std::cout << "\nThe fixed-step count is dominated by the violent launch: a uniform dt must be\n"
-                 "small enough for the first milliseconds at v0, then wastes that resolution over\n"
-                 "the entire calm tail. Adaptive spends its small steps only at the start and\n"
-                 "strides through the terminal-velocity descent -- here a ~10x step saving that\n"
-                 "widens as the accuracy target tightens. (The adaptive count includes rejected\n"
-                 "attempts, which also cost evaluations.)\n";
+    std::cout << "\ntol is the LOCAL error bound (max-norm over the state vector) -- the embedded\n"
+                 "5th-minus-4th-order difference within a single RK45 step. Each step is accepted\n"
+                 "when that estimate is <= tol, else rejected and retried with a smaller dt.\n"
+                 "adaptive err is the GLOBAL position error at t=3 s vs the RK8 reference.\n";
+    std::cout << "\nThe fixed-step count is dominated by the high deceleration at launch: a uniform\n"
+                 "dt must be small enough for the first milliseconds at v0, then wastes that\n"
+                 "resolution over the entire calm tail. Adaptive spends its small steps only at\n"
+                 "the start and strides through the terminal-velocity descent -- here a ~10x step\n"
+                 "saving that widens as the accuracy target tightens. (The adaptive count includes\n"
+                 "rejected attempts, which also cost evaluations.)\n";
 
     return 0;
 }

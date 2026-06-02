@@ -427,7 +427,7 @@ Cd model parameters:
 
 ### demo_rk45_adaptive
 
-Shows how adaptive RK45 step-size control concentrates work where the dynamics are hard. A ping-pong ball (very high drag) is launched at high speed under smooth v² drag: the opening is violent (drag ∝ v², so the ball sheds speed at hundreds of m/s²) and demands a small `dt`, while the slow terminal-velocity tail is gentle and lets `dt` grow ~60×. A per-step trace shows `dt` and the embedded error estimate reacting to the speed, and a head-to-head reports how many fixed-step RK45 steps (same method, same order) are needed to match the adaptive run's accuracy — adaptive wins ~10× because a uniform `dt` must stay small everywhere just to survive the launch.
+Shows how adaptive RK45 step-size control concentrates work where the dynamics are hard. A ping-pong ball (very high drag) is launched at high speed under smooth v² drag: the opening decelerates hard (drag ∝ v², so the ball sheds speed at thousands of m/s² — ≈ 5,400 m/s² at launch) and demands a small `dt`, while the slow terminal-velocity tail is gentle and lets `dt` grow ~60×. A per-step trace shows `dt` and the embedded error estimate reacting to the speed, and a head-to-head reports how many fixed-step RK45 steps (same method, same order) are needed to match the adaptive run's accuracy — adaptive wins ~10× because a uniform `dt` must stay small everywhere just to survive the launch.
 
 ```sh
 ./demo_rk45_adaptive
@@ -493,12 +493,17 @@ Reference (RK8, dt = 1e-4): x = 23.7424 m, y = 4.0576 m
     1e-05      47 (44+3)            9.42e-06              462
     1e-07      102 (101+1)          3.92e-08             1079
 
-The fixed-step count is dominated by the violent launch: a uniform dt must be
-small enough for the first milliseconds at v0, then wastes that resolution over
-the entire calm tail. Adaptive spends its small steps only at the start and
-strides through the terminal-velocity descent -- here a ~10x step saving that
-widens as the accuracy target tightens. (The adaptive count includes rejected
-attempts, which also cost evaluations.)
+tol is the LOCAL error bound (max-norm over the state vector) -- the embedded
+5th-minus-4th-order difference within a single RK45 step. Each step is accepted
+when that estimate is <= tol, else rejected and retried with a smaller dt.
+adaptive err is the GLOBAL position error at t=3 s vs the RK8 reference.
+
+The fixed-step count is dominated by the high deceleration at launch: a uniform
+dt must be small enough for the first milliseconds at v0, then wastes that
+resolution over the entire calm tail. Adaptive spends its small steps only at
+the start and strides through the terminal-velocity descent -- here a ~10x step
+saving that widens as the accuracy target tightens. (The adaptive count includes
+rejected attempts, which also cost evaluations.)
 ```
 
 </details>
