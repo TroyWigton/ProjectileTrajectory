@@ -19,6 +19,7 @@ add_executable(example_3d_motion src/example_3d_motion.cpp)
 add_executable(golf_ball_drag_study src/golf_ball_drag_study.cpp ${COMMON_SOURCES})
 add_executable(demo_rk45_adaptive src/demo_rk45_adaptive.cpp ${COMMON_SOURCES})
 add_executable(convergence_study src/convergence_study.cpp ${COMMON_SOURCES})
+add_executable(adaptive_driver_test src/adaptive_driver_test.cpp ${COMMON_SOURCES})
 
 # Include directories
 target_include_directories(optimal_angle_search PRIVATE include)
@@ -30,3 +31,4 @@ target_include_directories(example_3d_motion PRIVATE include)
 target_include_directories(golf_ball_drag_study PRIVATE include)
 target_include_directories(demo_rk45_adaptive PRIVATE include)
 target_include_directories(convergence_study PRIVATE include)
+target_include_directories(adaptive_driver_test PRIVATE include)

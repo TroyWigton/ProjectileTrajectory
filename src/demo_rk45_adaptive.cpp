@@ -1,27 +1,16 @@
 /**
  * @file demo_rk45_adaptive.cpp
- * @brief Demonstration of adaptive Runge-Kutta 4(5) integration.
+ * @brief Adaptive RK45 step-size control demonstration.
  *
- * The point of an adaptive stepper is that it places its work where the work
- * is needed: it SHRINKS dt where the dynamics are hard and GROWS dt where they
- * are smooth, all driven by the embedded 4th/5th-order error estimate.
+ * Integrates a high-speed ping-pong ball (k/m = PING_PONG_BALL) under v^2 drag.
+ * Drag acceleration scales with v^2, so the launch is the hardest part of the
+ * flight and needs a small dt, while the slow terminal-velocity tail allows a
+ * much larger one; the constant-Cd drag is smooth, so the embedded error
+ * estimate stays well-behaved.
  *
- * Scenario: a ping-pong ball (very high drag, k/m = PING_PONG_BALL) launched at
- * high speed under smooth v^2 drag. Because drag acceleration scales with v^2,
- * the opening of the flight is violent -- at launch the ball sheds speed at
- * hundreds of m/s^2 -- so the solution has high curvature there and demands a
- * small dt. As the ball slows toward its gentle terminal-velocity descent the
- * dynamics relax and dt can grow by orders of magnitude. The drag model is
- * smooth (constant Cd), so the error estimate is well-behaved -- this isolates
- * adaptivity from any non-smoothness.
- *
- * Two lessons in the output:
- *   1. A per-step trace, so you can watch dt start tiny in the violent opening
- *      and stretch out as the motion calms.
- *   2. A head-to-head: how many *fixed*-step RK45 steps (same method, same
- *      order) are required to match the adaptive run's accuracy. Adaptive wins
- *      because a fixed dt must be small *everywhere* to survive the opening,
- *      while the difficulty is concentrated at the start.
+ * Output has two parts: a per-step trace of dt and the error estimate, and a
+ * comparison of the adaptive step count against fixed-step RK45 (same order) at
+ * matched accuracy.
  */
 #include <iostream>
 #include <iomanip>
@@ -33,10 +22,11 @@
 #include "../include/types.hpp"
 #include "../include/derivative_functions.hpp"
 #include "../include/integrators.hpp"
+#include "../include/adaptive_driver.hpp"
 
 using namespace StateIndex4D;
 
-// --- Scenario (tweak these to explore the controller's behavior) ---
+// --- Scenario parameters ---
 namespace Scenario {
     constexpr double K_OVER_M  = DragRatios::PING_PONG_BALL;  // very high drag (~0.134)
     constexpr double V0        = 200.0;  // m/s launch speed (high, so v^2 drag bites hard)
@@ -103,84 +93,55 @@ struct AdaptiveStats {
     double    v_min_dt = 0.0;  // speed there (to tie small dt back to the physics)
 };
 
-// Adaptive RK45 to t=DURATION. With trace=true, logs every attempt so the
-// reader can watch dt and the error estimate respond to the dynamics.
+// Adaptive RK45 integration to t=DURATION. The observer prints the per-step
+// trace and records the smallest controller-chosen step (its start-of-step
+// time and speed).
 template <class Deriv>
 static AdaptiveStats run_adaptive(const Deriv& deriv, double tol, bool trace) {
     AdaptiveStats st;
-    State4D s = launch_state();
-    double t  = 0.0;
-    double dt = Scenario::DT_INIT;
+    State4D y = launch_state();
+
+    AdaptiveControl ctrl;
+    ctrl.dt_init = Scenario::DT_INIT;
+    ctrl.dt_max  = Scenario::DT_MAX;
+    ctrl.dt_min  = 1e-9;
+    // safety 0.9, max_grow 2.0, min_shrink 0.1, max_shrink_on_reject 0.5 and
+    // error_order 4 (exponent 1/5) come from the AdaptiveControl defaults.
 
     if (trace) {
         std::cout << " step   t(s)    dt(s)      v(m/s)    err est    result\n";
         std::cout << " --------------------------------------------------------------------\n";
     }
 
-    long long attempt = 0;
-    while (t < Scenario::DURATION - 1e-12) {
-        // Clamp the final step so we land exactly on t=DURATION. A clamped step
-        // is not representative of the controller's choice, so it is excluded
-        // from the dt statistics below.
-        const double natural_dt = dt;
-        const double h = std::min(dt, Scenario::DURATION - t);
-        const bool   clamped = (h < natural_dt);
-
-        const AdaptiveStepResult<State4D> r = rk45_adaptive_step(s, t, h, deriv);
-
-        double err = 0.0;
-        for (double e : r.error) err = std::max(err, std::abs(e));
-
-        const bool   accept = (err <= tol);
-        const double v      = speed(s);
-        ++attempt;
-
+    auto observe = [&](const StepInfo<State4D>& info) {
+        const double v = speed(info.y);
         if (trace) {
-            std::cout << std::setw(5) << attempt << "  "
-                      << std::fixed << std::setprecision(3) << std::setw(6) << t << "  "
-                      << std::scientific << std::setprecision(2) << std::setw(8) << h << "  "
+            double err = 0.0;
+            for (double e : info.error) err = std::max(err, std::abs(e));
+            std::cout << std::setw(5) << info.attempt << "  "
+                      << std::fixed << std::setprecision(3) << std::setw(6) << info.t << "  "
+                      << std::scientific << std::setprecision(2) << std::setw(8) << info.dt << "  "
                       << std::fixed << std::setprecision(2) << std::setw(8) << v << "   "
                       << std::scientific << std::setprecision(2) << std::setw(8) << err << "   "
-                      << (accept ? "accept" : "REJECT")
+                      << (info.accepted ? "accept" : "REJECT")
                       << "\n";
         }
-
-        if (accept) {
-            // Record dt stats against the step's STARTING (t, v) -- that is
-            // where the difficulty that forced this dt lives. Exclude the
-            // warm-up attempt (attempt == 1 uses the raw DT_INIT guess rather
-            // than a controller decision) and any step clamped to land on
-            // t=DURATION. (Once the first attempt is rejected, every subsequent
-            // dt is controller-derived, so this keeps the genuine smallest step
-            // at the violent launch.)
-            if (!clamped && attempt > 1) {
-                if (h < st.min_dt) { st.min_dt = h; st.t_min_dt = t; st.v_min_dt = v; }
-                if (h > st.max_dt) st.max_dt = h;
-            }
-            s = r.state;
-            t += h;
-            ++st.accepted;
-            // Step-size controller: target dt_new = dt * safety * (tol/err)^(1/5).
-            const double scale = std::min(std::max(
-                0.9 * std::pow(tol / (err + 1e-30), 0.2), 0.1), 2.0);
-            dt = std::min(h * scale, Scenario::DT_MAX);
-        } else {
-            ++st.rejected;
-            // Reject: shrink and retry the same t (do not advance). Use the
-            // error-predicted factor, but force at least a halving so that an
-            // over-large dt (e.g. the initial guess fed into the violent launch)
-            // collapses quickly instead of creeping down over many attempts.
-            double scale = 0.9 * std::pow(tol / (err + 1e-30), 0.2);
-            scale = std::min(scale, 0.5);   // shrink by at least half
-            scale = std::max(scale, 0.1);   // but don't overshrink in one go
-            dt = h * scale;
-            if (dt < 1e-9) {
-                std::cerr << "Error: step-size underflow; aborting.\n";
-                break;
-            }
+        // Smallest controller-chosen step: exclude the warm-up attempt (#1 uses
+        // the raw DT_INIT guess) and the clamped final step; record start-of-step
+        // (t, v), where the difficulty that forced this dt lives.
+        if (info.accepted && !info.clamped && info.attempt > 1) {
+            if (info.dt < st.min_dt) { st.min_dt = info.dt; st.t_min_dt = info.t; st.v_min_dt = v; }
+            if (info.dt > st.max_dt) st.max_dt = info.dt;
         }
-    }
-    st.final_state = s;
+    };
+
+    const AdaptiveResult res = integrate_adaptive(
+        y, 0.0, Scenario::DURATION, ctrl, deriv,
+        MaxAbsNorm{tol}, /*event=*/nullptr, observe);
+
+    st.final_state = y;
+    st.accepted    = res.accepted;
+    st.rejected    = res.rejected;
     return st;
 }
 
