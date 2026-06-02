@@ -8,15 +8,16 @@
  *
  * Scenario: a ping-pong ball (very high drag, k/m = PING_PONG_BALL) launched at
  * high speed under smooth v^2 drag. Because drag acceleration scales with v^2,
- * the opening of the flight is violent -- at launch the ball sheds speed at
- * hundreds of m/s^2 -- so the solution has high curvature there and demands a
- * small dt. As the ball slows toward its gentle terminal-velocity descent the
- * dynamics relax and dt can grow by orders of magnitude. The drag model is
+ * the opening of the flight decelerates hard -- at launch the ball sheds speed
+ * at thousands of m/s^2 (~5,400 m/s^2) -- so the solution has high curvature
+ * there and demands a small dt. As the ball slows toward its gentle
+ * terminal-velocity descent the dynamics relax and dt can grow by over an order
+ * of magnitude. The drag model is
  * smooth (constant Cd), so the error estimate is well-behaved -- this isolates
  * adaptivity from any non-smoothness.
  *
  * Two lessons in the output:
- *   1. A per-step trace, so you can watch dt start tiny in the violent opening
+ *   1. A per-step trace, so you can watch dt start tiny in the high-deceleration opening
  *      and stretch out as the motion calms.
  *   2. A head-to-head: how many *fixed*-step RK45 steps (same method, same
  *      order) are required to match the adaptive run's accuracy. Adaptive wins
@@ -152,7 +153,7 @@ static AdaptiveStats run_adaptive(const Deriv& deriv, double tol, bool trace) {
             // than a controller decision) and any step clamped to land on
             // t=DURATION. (Once the first attempt is rejected, every subsequent
             // dt is controller-derived, so this keeps the genuine smallest step
-            // at the violent launch.)
+            // at the high-deceleration launch.)
             if (!clamped && attempt > 1) {
                 if (h < st.min_dt) { st.min_dt = h; st.t_min_dt = t; st.v_min_dt = v; }
                 if (h > st.max_dt) st.max_dt = h;
@@ -168,7 +169,7 @@ static AdaptiveStats run_adaptive(const Deriv& deriv, double tol, bool trace) {
             ++st.rejected;
             // Reject: shrink and retry the same t (do not advance). Use the
             // error-predicted factor, but force at least a halving so that an
-            // over-large dt (e.g. the initial guess fed into the violent launch)
+            // over-large dt (e.g. the initial guess fed into the high-deceleration launch)
             // collapses quickly instead of creeping down over many attempts.
             double scale = 0.9 * std::pow(tol / (err + 1e-30), 0.2);
             scale = std::min(scale, 0.5);   // shrink by at least half
@@ -195,7 +196,8 @@ int main() {
               << Scenario::K_OVER_M << "), v0 = " << std::setprecision(0) << Scenario::V0
               << " m/s, launch " << Scenario::ANGLE_DEG << " deg, smooth v^2 drag.\n"
               << "Integrated to t = " << Scenario::DURATION << " s. Drag accel ~ v^2, so the launch\n"
-              << "is violent (small dt) and the slow terminal-velocity tail is gentle (large dt).\n\n";
+              << "decelerates hard (~5,400 m/s^2, small dt) and the slow terminal-velocity tail is\n"
+              << "gentle (large dt).\n\n";
 
     // --- 1. Per-step trace ---------------------------------------------------
     const double trace_tol = 1e-4;

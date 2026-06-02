@@ -8,11 +8,11 @@
  * theoretical order p, halving dt should shrink the global error by 2^p — so
  * the empirical order log2(error_prev / error_curr) should approach p.
  *
- * Once the error reaches the floating-point precision floor (~1e-13 for
- * double), shrinking dt further stops reducing the error, and the empirical
- * order departs from the theoretical value. That breakdown is itself part of
- * the convergence story for high-order methods on smooth problems and is left
- * visible in the output rather than hidden.
+ * Once the error reaches the precision floor (~1e-10 for this problem, set by
+ * the reference's own accumulated rounding), shrinking dt further stops reducing
+ * the error, and the empirical order departs from the theoretical value. That
+ * breakdown is itself part of the convergence story for high-order methods on
+ * smooth problems and is left visible in the output rather than hidden.
  */
 
 #include <iostream>
@@ -92,11 +92,11 @@ int main() {
     std::cout << "global position error at t=T is computed against the reference.\n";
     std::cout << "Empirical order = log2(error_prev / error_curr). For an order-p\n";
     std::cout << "method, the empirical order should approach p until the error\n";
-    std::cout << "reaches the floating-point precision floor (~1e-13).\n";
+    std::cout << "reaches the precision floor (~1e-10 for this problem).\n";
     std::cout << "\n";
 
     // Each integrator gets a dt sequence chosen to keep error well above the
-    // floating-point precision floor (~1e-11 for this problem) while still
+    // floating-point precision floor (~1e-10 for this problem) while still
     // showing several halvings of meaningful convergence behavior. Higher-order
     // methods need larger dt values to keep error in the observable range;
     // lower-order methods need smaller dt to keep error from being uselessly

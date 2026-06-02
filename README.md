@@ -49,20 +49,20 @@ $F_d = ma$ represents the drag force acting on the projectile. Consolidating fac
 
 ### Integrators
 
-The integrators live in `include/integrators.hpp` as **header-only template functions, generic over both the state type and the derivative function**. Each method shares the uniform signature `(state, t, dt, deriv_func)` and returns the next state, so the same code integrates the 4-DOF projectile state `[x, y, vx, vy]`, the 6-DOF `State6D`, or any other state type without modification. Stage temporaries are `thread_local`, which keeps `std::array`-backed states allocation-free across millions of steps. Six methods are provided:
+The integrators live in `include/integrators.hpp` as **header-only template functions, generic over both the state type and the derivative function**. Each method shares the uniform signature `(state, t, dt, deriv_func)` and returns the next state, so the same code integrates the 4-DOF projectile state `[x, y, vx, vy]`, the 6-DOF `State6D`, or any other state type without modification. Stage temporaries are `thread_local`, which keeps `std::array`-backed states allocation-free across millions of steps. Six integrator functions are provided, grouped below into five methods (RK45 appears as two variants):
 
 - **Euler (1st Order)**: Basic forward stepping method used as a baseline. Simple but requires extremely small time steps for accuracy.
 - **Heun (2nd Order)**: Also known as the trapezoidal method. Offers improved stability over Euler.
-- **RK4 (4th Order)**: The classic Runge-Kutta method. Provides an excellent balance of speed and accuracy; used as the default engine.
+- **RK4 (4th Order)**: The classic Runge-Kutta method, and the default engine — four evaluations per step for fourth-order accuracy. See [compare_integrators](#compare_integrators) and [convergence_study](#convergence_study) for the measured cost/accuracy tradeoff.
 - **RK45 (Dormand-Prince)**: An embedded 5(4) method available in two variants — `rk45_step` (fixed dt, high-precision) and `rk45_adaptive_step` (returns an error estimate alongside the new state for step-size control). Both share the same 7-stage tableau.
-- **RK8 (8th Order)**: High-order method requiring 13 function evaluations per step. Extremely accurate, used as the "Ground Truth" for benchmarking other methods.
+- **RK8 (8th Order)**: High-order method requiring 13 function evaluations per step. Its error reaches the double-precision floor at moderate step sizes, so it serves as the reference ("Ground Truth") for benchmarking the other methods.
 
 ### Golden Section Search
 
 To find the launch angle $\theta$ that maximizes horizontal distance $x_{impact}$, the program treats the simulation as a function $f(\theta) \rightarrow x_{impact}$. The search itself is a template, `golden_section_search_max(func, a, b, tol)` in `include/golden_section.hpp`, generic over the objective callable — `optimal_angle_search` simply passes it a lambda that wraps `Simulation::run`.
 
 - **Algorithm**: Golden Section Search.
-- **Why**: This is a robust bracket-reduction method that finds extrema without requiring derivatives of the objective function. It iteratively narrows down the range $[a, b]$ containing the optimal angle until the width is within a specified tolerance.
+- **Why**: This is a bracket-reduction method that finds extrema without requiring derivatives of the objective function. It iteratively narrows down the range $[a, b]$ containing the optimal angle until the width is within a specified tolerance.
 - **Process**:
     1.  **Initialization**: Start with a known bracket $[a,b]$ (e.g., $10^\circ$ to $80^\circ$) that is certain to contain the maxima.
     2.  **Evaluation**: Evaluate the distance function at two interior points $c$ and $d$ chosen by the golden ratio $\phi = \frac{1+\sqrt{5}}{2}$.
@@ -91,11 +91,11 @@ Below are calculated `k_over_m` values for common objects, assuming standard sea
 | Object | Mass (kg) | Diam (m) | Cd | Area (m^2) | k/m (1/m) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Vacuum** (No Drag) | - | - | 0.0 | - | **0.0** |
-| **9mm Bullet** (115gr FMJ) | 0.00745 | 0.009 | 0.295 | $6.36 \times 10^{-5}$ | **0.00154** |
+| **.223 Remington** (55gr FMJ) | 0.00356 | 0.00569 | 0.275 | $2.54 \times 10^{-5}$ | **0.00120** |
 | **Golf Ball** | 0.04593 | 0.0427 | 0.30 | $1.43 \times 10^{-3}$ | **0.00573** |
 | **Ping Pong Ball** | 0.0027 | 0.040 | 0.47 | $1.26 \times 10^{-3}$ | **0.13398** |
 
-**Note:** These are approximations using constant drag coefficients. Real-world ballistics involve velocity-dependent $C_d$ (Mach number and Reynolds number variations), but these values provide sufficient baselines for comparison.
+**Note:** These are approximations using constant drag coefficients. The bolded k/m is computed from each row's inputs; the simulation's `DragRatios` constants use rounded forms (e.g. 0.00573 → 0.0057). Real-world ballistics involve velocity-dependent $C_d$ (Mach number and Reynolds number variations), but these values provide sufficient baselines for comparison.
 
 ## Getting Started
 
@@ -235,7 +235,7 @@ Each integrator is run at progressively halved dt values; the
 global position error at t=T is computed against the reference.
 Empirical order = log2(error_prev / error_curr). For an order-p
 method, the empirical order should approach p until the error
-reaches the floating-point precision floor (~1e-13).
+reaches the precision floor (~1e-10 for this problem).
 
 ------------------------------------------------------------
 Euler (theoretical order 1)
@@ -441,7 +441,8 @@ Shows how adaptive RK45 step-size control concentrates work where the dynamics a
 
 Scenario: ping-pong ball (k/m = 0.134), v0 = 200 m/s, launch 45 deg, smooth v^2 drag.
 Integrated to t = 3 s. Drag accel ~ v^2, so the launch
-is violent (small dt) and the slow terminal-velocity tail is gentle (large dt).
+decelerates hard (~5,400 m/s^2, small dt) and the slow terminal-velocity tail is
+gentle (large dt).
 
 --- Per-step trace (tol = 1e-04) ---
  step   t(s)    dt(s)      v(m/s)    err est    result

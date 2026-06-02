@@ -80,7 +80,7 @@ State heun_step(const State& state, double t, double dt, DerivativeFunc deriv_fu
 //
 // The final state update uses a weighted average of these slopes: (k1 + 2*k2 + 2*k3 + k4) / 6.
 // The middle slopes (k2, k3) are given double weight, similar to Simpson's rule for integration,
-// which essentially cancels out lower-order error terms.
+// which cancels lower-order error terms.
 template<typename State, typename DerivativeFunc>
 State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
     thread_local State k1, k2, k3, k4, temp;
@@ -135,9 +135,8 @@ namespace rk45_detail {
     // Stage Time Nodes (c coefficients):
     // Determines the time nodes t_i = t + c_i * dt where we evaluate the system's differential equation.
     //
-    // Yes, the 'k' values are slopes (derivatives, dy/dt).
-    // "Probing" just means we are sampling the derivative function f(t, y) at a specific point 
-    // to determine which direction the system wants to move.
+    // The 'k' values are stage slopes (derivatives dy/dt): each stage samples the
+    // derivative function f(t, y) at the time node t + c_i*dt listed below.
     //
     // k1 (c=0)    : Slope at start of step (t).
     // k2 (c=1/5)  : Slope at 20% through the time step (t + 0.2*dt).
@@ -145,8 +144,9 @@ namespace rk45_detail {
     // k4 (c=4/5)  : Slope at 80% through the time step.
     // k5 (c=8/9)  : Slope at ~89% through the time step.
     // k6 (c=1)    : Slope at the end of the time step (100%).
-    // k7 (c=1)    : Slope at the end (100%), used for the FSAL property.
-    // Note: If the step is accepted, k7 of the current step becomes k1 of the next step.
+    // k7 (c=1)    : Slope at the end (100%). Enables the FSAL property (b5 equals the
+    //               last row of 'a'): an FSAL driver could reuse k7 as k1 of the next
+    //               step, but this implementation recomputes all stages on every call.
     constexpr double c[7] = {0, 1.0/5.0, 3.0/10.0, 4.0/5.0, 8.0/9.0, 1.0, 1.0};
 
     // Runge-Kutta Matrix (a coefficients):
@@ -181,8 +181,8 @@ namespace rk45_detail {
     // Instead of explicitly computing the 4th-order solution, we compute the difference directly.
     // Error = y_5th - y_4th = sum((b5_i - b4_i) * k_i).
     // This vector represents that difference.
-    // Notice the last element is non-zero: The 4th order solution uses k7, or rather, the error
-    // estimate requires information from the very end of the step.
+    // Notice the last element is non-zero: b5[6] = 0 but b4[6] = 1/40, so the 4th-order
+    // solution (and hence the error estimate) depends on k7 even though the 5th-order result does not.
     constexpr double error_coeffs[7] = {
         35.0/384.0 - 5179.0/57600.0,
         0 - 0,
@@ -226,7 +226,7 @@ namespace rk45_detail {
 // Returns the 5th order solution. Can be used as a high-accuracy fixed-step integrator.
 //
 // By discarding the error estimate, this function behaves effectively as a standard
-// fixed-step integrator, but with 5th-order accuracy (6 evaluations per step).
+// fixed-step integrator, but with 5th-order accuracy (7 stage evaluations per step).
 template<typename State, typename DerivativeFunc>
 State rk45_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
     thread_local State k[7];
@@ -257,7 +257,7 @@ struct AdaptiveStepResult {
 // This is the core component of an adaptive ODE solver (like MATLAB's ode45).
 //
 // Principle:
-// We calculate two solutions "for the price of one" (set of stages):
+// Both solutions are produced from the same set of stage evaluations:
 // - y_5th: The proposed new state.
 // - y_4th: A slightly less accurate state.
 //
@@ -266,8 +266,8 @@ struct AdaptiveStepResult {
 // - Too large (> tolerance): The step must be rejected and retried with smaller dt.
 // - Too small (<< tolerance): The next step size can be aggressively increased.
 //
-// This allows the solver to "slow down" at sharp turns (high curvature) and "speed up"
-// on straightaways (linear dynamics), ensuring efficiency and accuracy.
+// This lets the solver take small steps at sharp turns (high curvature) and large
+// steps on straightaways (linear dynamics).
 template<typename State, typename DerivativeFunc>
 AdaptiveStepResult<State> rk45_adaptive_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
     thread_local State k[7];
@@ -304,23 +304,19 @@ AdaptiveStepResult<State> rk45_adaptive_step(const State& state, double t, doubl
     return result;
 }
 
-// 8th Order Runge-Kutta (Dormand-Prince 853)
-// The "853" in the name represents the orders of the embedded methods:
-// - 8: The primary solution output is 8th-order accurate.
-// - 5: A 5th-order approximation is calculated to estimate error (adaptive stepping).
-// - 3: A 3rd-order approximation is available for "dense output" (interpolating smooth curves between steps).
-//
-// A high-order explicit Runge-Kutta method.
+// 8th Order Runge-Kutta (Prince-Dormand RK8(7)13M)
+// These are the RK8(7)13M coefficients of Prince & Dormand (1981): a 13-stage, 8th-order
+// formula with an embedded 7th-order solution for error estimation ("13" = stage count,
+// "M" = their minimized-truncation-error variant). This implementation is fixed-step --
+// it propagates the 8th-order solution only and omits the embedded 7th-order estimator.
 //
 // Usage:
-// Ideally suited for problems with very stringent error tolerances (e.g., 10^-9 to 10^-13)
+// Suited for problems with very stringent error tolerances (e.g., 10^-9 to 10^-13)
 // or extremely smooth functions (like celestial mechanics/orbits).
 // For looser tolerances, the overhead of 13 stages per step often makes it slower than RK4 or RK45.
 //
-// Coefficients:
-// These are the Dormand-Prince 8(7) coefficients.
-// - Order 8 for the main solution.
-// - Order 5 and 3 embedded methods for error estimation (though this implementation is fixed-step/stripped).
+// Reference for these coefficients: P. J. Prince and J. R. Dormand, "High order embedded
+// Runge-Kutta formulae," J. Comput. Appl. Math. 7(1), 67-75 (1981).
 template<typename State, typename DerivativeFunc>
 State rk8_step(const State& state, double t, double dt, DerivativeFunc deriv_func) {
     // Butcher Tableau Matrix A (13 stages)

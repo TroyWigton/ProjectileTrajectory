@@ -2,7 +2,7 @@
  * @file test.cpp
  * @brief Unit tests and validation suite for the Projectile Simulation library.
  *
- * This file contains a comprehensive test suite to verify the correctness and
+ * This file contains the validation suite that verifies the correctness and
  * accuracy of the numerical integrators and trajectory simulations.
  *
  * Tests included:
