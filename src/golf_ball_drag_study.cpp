@@ -3,12 +3,12 @@
 #include <cmath>
 #include <fstream>
 #include <iomanip>
-#include "../include/constants.hpp"
-#include "../include/types.hpp"
-#include "../include/derivative_functions.hpp"
-#include "../include/integrators.hpp"
-#include "../include/simulation.hpp"
-#include "../include/golden_section.hpp"
+#include "constants.hpp"
+#include "types.hpp"
+#include "derivative_functions.hpp"
+#include "integrators.hpp"
+#include "simulation.hpp"
+#include "golden_section.hpp"
 
 // Optimize angle for a given configuration and print results
 void run_optimization_case(std::string label, double v0, double k_over_m, ProjectileDerivative deriv_func) {

@@ -2,9 +2,9 @@
 #include <iomanip>
 #include <vector>
 #include <cmath>
-#include "../include/constants.hpp"
-#include "../include/types.hpp"
-#include "../include/integrators.hpp"
+#include "constants.hpp"
+#include "types.hpp"
+#include "integrators.hpp"
 
 // Define a 6D derivative function for 3D motion with drag
 void projectile_3d_deriv(const State6D& s, double t, State6D& deriv, double g, double k_over_m) {

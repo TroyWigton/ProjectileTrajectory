@@ -17,9 +17,9 @@
  * signature; projectile-specific parameters (g, k/m) are carried in the
  * ProjectileContext bundle.
  */
-#include "../include/derivative_functions.hpp"
-#include "../include/types.hpp"
-#include "../include/constants.hpp"
+#include "derivative_functions.hpp"
+#include "types.hpp"
+#include "constants.hpp"
 #include <cmath>
 
 void drag_deriv_v_squared(const State4D& s, double t, State4D& deriv, const ProjectileContext& ctx) {

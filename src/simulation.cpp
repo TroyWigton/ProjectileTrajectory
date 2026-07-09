@@ -11,8 +11,8 @@
  * - Execution loop that steps the simulation until ground impact (y < 0).
  * - Linear interpolation to find the precise landing coordinate between time steps.
  */
-#include "../include/simulation.hpp"
-#include "../include/constants.hpp"
+#include "simulation.hpp"
+#include "constants.hpp"
 #include <cmath>
 
 Simulation::Simulation(double k_over_m,

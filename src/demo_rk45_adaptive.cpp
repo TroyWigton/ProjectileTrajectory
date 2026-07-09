@@ -30,10 +30,10 @@
 #include <cmath>
 #include <limits>
 #include <algorithm>
-#include "../include/constants.hpp"
-#include "../include/types.hpp"
-#include "../include/derivative_functions.hpp"
-#include "../include/integrators.hpp"
+#include "constants.hpp"
+#include "types.hpp"
+#include "derivative_functions.hpp"
+#include "integrators.hpp"
 
 using namespace StateIndex4D;
 

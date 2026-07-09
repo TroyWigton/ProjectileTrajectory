@@ -20,10 +20,10 @@
 #include <vector>
 #include <cmath>
 #include <string>
-#include "../include/constants.hpp"
-#include "../include/types.hpp"
-#include "../include/integrators.hpp"
-#include "../include/derivative_functions.hpp"
+#include "constants.hpp"
+#include "types.hpp"
+#include "integrators.hpp"
+#include "derivative_functions.hpp"
 
 // Integrate from initial state s0 over [0, t_end] using the given fixed-step
 // integrator at step size dt. Recomputes actual_dt = t_end / round(t_end/dt)

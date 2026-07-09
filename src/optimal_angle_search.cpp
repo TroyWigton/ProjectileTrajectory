@@ -19,14 +19,14 @@
 #include <cmath>
 #include <functional>
 #include <string>
-#include "../include/constants.hpp"
-#include "../include/types.hpp"
-#include "../include/derivative_functions.hpp"
+#include "constants.hpp"
+#include "types.hpp"
+#include "derivative_functions.hpp"
 
 //#define DEBUG // define before local includes to enable debug mode in those files
-#include "../include/golden_section.hpp"
-#include "../include/integrators.hpp"
-#include "../include/simulation.hpp"
+#include "golden_section.hpp"
+#include "integrators.hpp"
+#include "simulation.hpp"
 
 int main() {
     const double g = GRAVITY_EARTH;

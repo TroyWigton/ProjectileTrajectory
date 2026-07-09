@@ -23,12 +23,12 @@
 #include <vector>
 #include <utility>
 #include <map>
-#include "../include/constants.hpp"
-#include "../include/types.hpp"
-#include "../include/derivative_functions.hpp"
-#include "../include/golden_section.hpp"
-#include "../include/integrators.hpp"
-#include "../include/simulation.hpp"
+#include "constants.hpp"
+#include "types.hpp"
+#include "derivative_functions.hpp"
+#include "golden_section.hpp"
+#include "integrators.hpp"
+#include "simulation.hpp"
 
 // Define a struct to hold integrator information
 struct IntegratorInfo {
