@@ -20,6 +20,7 @@ Compute the optimal launch angle for a projectile to achieve the furthest horizo
   - [golf_ball_drag_study](#golf_ball_drag_study)
   - [demo_rk45_adaptive](#demo_rk45_adaptive)
   - [example_3d_motion](#example_3d_motion)
+  - [visualize_integration](#visualize_integration)
 - [Validation and Testing](#validation-and-testing)
 - [Manual Compilation](#manual-compilation)
 - [Authors](#authors)
@@ -530,6 +531,17 @@ Impact at t=9.0200 x=253.9047 y=-0.2314 z=44.7703
 
 </details>
 
+### visualize_integration
+
+Generates CSV datasets and renders them in a Jupyter notebook that shows, visually, how integration error depends on step size and method order — and how a Runge-Kutta method's intermediate "minor step" slope samples combine into a more accurate "major step" estimate. `visualize_integration` writes seven CSVs to `viz_data/` using the project's own integrators; `integration_visualization.ipynb` reads them and plots.
+
+```sh
+# from the repo root:
+mkdir -p viz_data && ./build/visualize_integration viz_data
+```
+
+The notebook covers: (1) one method (Euler) at shrinking Δt converging to truth; (2) different integrators at the *same* Δt, with a landing-region zoom (the high-order methods are graphically identical on the path — only the log plots tell them apart); (3) error-vs-time growth and a log-log order-of-accuracy plot whose asymptotic slopes approach each method's order (1, 2, 4, 5, 8; RK45 super-converges), with the coarse-Δt curve crossing and the round-off floor made explicit; and (4) a per-step **stage decomposition** on a sample ODE (y′ = y, true solution eᵗ) showing how Euler/Heun/RK4 sample the derivative at their major/minor points and blend those slopes into the more accurate major-step derivative. The C++ logger reconstructs the stages explicitly and asserts the reconstructed end-of-step state equals the canonical `*_step()` output, so the plots reflect exactly what the integrators compute.
+
 ## Validation and Testing
 
 The `test` executable runs a suite of validation tests to ensure physics-engine accuracy.
@@ -671,6 +683,11 @@ clang++ -std=c++14 -O3 -I include -o convergence_study src/convergence_study.cpp
 **3D Motion Demo:**
 ```sh
 clang++ -std=c++14 -O3 -I include -o example_3d_motion src/example_3d_motion.cpp
+```
+
+**Integration Visualization:**
+```sh
+clang++ -std=c++14 -O3 -I include -o visualize_integration src/visualize_integration.cpp src/simulation.cpp src/derivative_functions.cpp
 ```
 
 </details>
