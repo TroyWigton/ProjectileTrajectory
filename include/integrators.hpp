@@ -47,6 +47,18 @@ State euler_step(const State& state, double t, double dt, DerivativeFunc deriv_f
     return next_state;
 }
 
+// Stateless functor wrapping euler_step so a chosen method can be passed as a
+// compile-time Integrator template argument (e.g. to Simulation) instead of
+// through std::function type erasure. The call operator is itself a template,
+// so State/DerivativeFunc are deduced fresh at each call site and the whole
+// chain inlines. Same pattern as adaptive_driver.hpp's Rk45Stepper.
+struct EulerStepper {
+    template<typename State, typename DerivativeFunc>
+    State operator()(const State& state, double t, double dt, DerivativeFunc deriv_func) const {
+        return euler_step(state, t, dt, deriv_func);
+    }
+};
+
 
 //Heun's Method (Trapezoidal Rule)
 template<typename State, typename DerivativeFunc>
@@ -66,6 +78,14 @@ State heun_step(const State& state, double t, double dt, DerivativeFunc deriv_fu
     }
     return next_state;
 }
+
+// See EulerStepper above for why this exists.
+struct HeunStepper {
+    template<typename State, typename DerivativeFunc>
+    State operator()(const State& state, double t, double dt, DerivativeFunc deriv_func) const {
+        return heun_step(state, t, dt, deriv_func);
+    }
+};
 
 
 //Fourth Order Runge-Kutta
@@ -118,6 +138,14 @@ State rk4_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
     }
     return next_state;
 }
+
+// See EulerStepper above for why this exists.
+struct RK4Stepper {
+    template<typename State, typename DerivativeFunc>
+    State operator()(const State& state, double t, double dt, DerivativeFunc deriv_func) const {
+        return rk4_step(state, t, dt, deriv_func);
+    }
+};
 
 // RK45 (Dormand-Prince) Implementation Details
 //
@@ -245,6 +273,15 @@ State rk45_step(const State& state, double t, double dt, DerivativeFunc deriv_fu
     }
     return next_state;
 }
+
+// See EulerStepper above for why this exists. Wraps the fixed-step (non
+// error-estimating) form of RK45.
+struct RK45Stepper {
+    template<typename State, typename DerivativeFunc>
+    State operator()(const State& state, double t, double dt, DerivativeFunc deriv_func) const {
+        return rk45_step(state, t, dt, deriv_func);
+    }
+};
 
 // Result structure for adaptive integration
 template<typename State>
@@ -415,5 +452,13 @@ State rk8_step(const State& state, double t, double dt, DerivativeFunc deriv_fun
     
     return next_state;
 }
+
+// See EulerStepper above for why this exists.
+struct RK8Stepper {
+    template<typename State, typename DerivativeFunc>
+    State operator()(const State& state, double t, double dt, DerivativeFunc deriv_func) const {
+        return rk8_step(state, t, dt, deriv_func);
+    }
+};
 
 #endif // INTEGRATORS_HPP

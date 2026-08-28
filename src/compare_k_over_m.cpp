@@ -25,7 +25,7 @@ int main() {
     const double v0 = 100.0;
     
     // Setup integrator (RK4 is a good balance)
-    SystemIntegrator<State4D> integrator = rk4_step<State4D, SystemDerivative<State4D>>;
+    RK4Stepper integrator;
 
     std::cout << "K/M Variation Analysis\n";
     std::cout << "--------------------------------------------------------\n";
@@ -64,7 +64,7 @@ int main() {
     for (double k_over_m : k_values) {
         
         // Use default derivative function (v squared drag)
-        Simulation simulation(k_over_m, integrator, v0);
+        auto simulation = make_simulation(k_over_m, integrator, v0);
 
         auto distance_func = [&](double angle_deg) {
             return simulation.run(angle_deg, deltaT).distance;

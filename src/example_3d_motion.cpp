@@ -46,8 +46,7 @@ int main() {
     state[Z_VEL] = v0 * std::cos(angle_launch) * std::sin(angle_side);
 
     // Setup integrator
-    // We can use the generic rk4_step directly
-    SystemIntegrator<State6D> integrator = rk4_step<State6D, std::function<void(const State6D&, double, State6D&)>>;
+    RK4Stepper integrator;
 
     // Bind parameters to derivative function
     auto deriv_func = [&](const State6D& s, double t, State6D& d) {

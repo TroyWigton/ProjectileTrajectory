@@ -9,7 +9,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 set(COMMON_SOURCES
     src/derivative_functions.cpp
-    src/simulation.cpp
 )
 
 add_executable(optimal_angle_search src/optimal_angle_search.cpp ${COMMON_SOURCES})

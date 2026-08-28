@@ -48,12 +48,10 @@ int main() {
     std::cout << "Using drag coefficient k/m = " << k_over_m << "\n";
     std::cout << "Target distance precision: " << distance_tolerance << " m\n";
 
-    // Cast the template function to the specific SystemIntegrator type
-    // to allow implicit conversion in Simulation constructor
-    SystemIntegrator<State4D> integrator = rk4_step<State4D, SystemDerivative<State4D>>;
+    RK4Stepper integrator;
 
     // Use default drag_deriv_v_squared
-    Simulation simulation(k_over_m, integrator, v0);
+    auto simulation = make_simulation(k_over_m, integrator, v0);
 
     auto distance_func = [&](double angle_deg) {
         return simulation.run(angle_deg, deltaT).distance;

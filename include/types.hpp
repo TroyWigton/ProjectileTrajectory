@@ -3,7 +3,6 @@
 
 #include <array>
 #include <vector>
-#include <functional>
 
 // State containers ----------------------------------------------------------
 // The framework treats the simulation state as an opaque flat container of
@@ -50,9 +49,14 @@ namespace StateIndex6D {
 // needs (gravity + drag for projectile motion; constants + masses for an
 // N-body system; anything else for some other problem). The framework never
 // inspects Context — it just passes it through to the bound derivative.
+//
+// A plain function pointer, not std::function: every model in this codebase
+// is a free function with this exact signature, so a pointer gives full
+// runtime selection (swap models by assigning a different function) with no
+// allocation and no type-erasure overhead.
 
 template <typename State, typename Context>
 using ParameterizedDerivative =
-    std::function<void(const State& state, double t, State& deriv_out, const Context& ctx)>;
+    void (*)(const State& state, double t, State& deriv_out, const Context& ctx);
 
 #endif // TYPES_HPP

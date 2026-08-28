@@ -17,10 +17,10 @@ void run_optimization_case(std::string label, double v0, double k_over_m, Projec
     const double h0 = 0.0;
 
     // Use standard RK4
-    SystemIntegrator<State4D> integrator = rk4_step<State4D, SystemDerivative<State4D>>;
+    RK4Stepper integrator;
 
     // Create Simulation instance
-    Simulation sim(k_over_m, integrator, v0, deriv_func, g, h0);
+    auto sim = make_simulation(k_over_m, integrator, v0, deriv_func, g, h0);
 
     // Lambda for optimization
     auto distance_func = [&](double angle_deg) {

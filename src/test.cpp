@@ -75,7 +75,7 @@ int main() {
         for (const auto& deriv : derivatives) {
             std::cout << "Testing Integrator: " << integ.name << ", Derivative: " << deriv.name << "... ";
 
-            Simulation simulation(k_over_m, integ.func, v0, deriv.func, g, h0);
+            auto simulation = make_simulation(k_over_m, integ.func, v0, deriv.func, g, h0);
 
             auto distance_func = [&](double angle_deg) {
                 return simulation.run(angle_deg, deltaT).distance;
@@ -119,7 +119,7 @@ int main() {
         
         // Run for each integrator
         for (const auto& integ : integrators) {
-             Simulation simulation(k_over_m_drag, integ.func, v0, deriv.func, g, h0);
+             auto simulation = make_simulation(k_over_m_drag, integ.func, v0, deriv.func, g, h0);
              auto distance_func = [&](double angle_deg) {
                 return simulation.run(angle_deg, deltaT).distance;
             };
@@ -185,9 +185,9 @@ int main() {
     
     // Simulation
     // Use RK4 and no_drag_deriv
-    SystemIntegrator<State4D> integ_rk4 = rk4_step<State4D, SystemDerivative<State4D>>;
+    RK4Stepper integ_rk4;
     // k_over_m = 0.0 for vacuum
-    Simulation simulation_h(0.0, integ_rk4, v0, no_drag_deriv, g, h0_test);
+    auto simulation_h = make_simulation(0.0, integ_rk4, v0, no_drag_deriv, g, h0_test);
     
     auto distance_func_h = [&](double angle_deg) {
         return simulation_h.run(angle_deg, deltaT).distance;
@@ -240,10 +240,10 @@ int main() {
 
     for (double h : test_heights) {
         // Use RK4 and v_squared drag
-        SystemIntegrator<State4D> integ_rk4_drag = rk4_step<State4D, SystemDerivative<State4D>>;
+        RK4Stepper integ_rk4_drag;
         double k_over_m_golf = 0.0057;
 
-        Simulation sim_drag_h(k_over_m_golf, integ_rk4_drag, v0, drag_deriv_v_squared, g, h);
+        auto sim_drag_h = make_simulation(k_over_m_golf, integ_rk4_drag, v0, drag_deriv_v_squared, g, h);
         
         auto distance_func_drag_h = [&](double angle_deg) {
             return sim_drag_h.run(angle_deg, deltaT).distance;

@@ -37,11 +37,11 @@ int main() {
     std::cout << "--------------------------------------------------------\n\n";
 
     // Setup Integrator (RK4)
-    SystemIntegrator<State4D> integrator = rk4_step<State4D, SystemDerivative<State4D>>;
+    RK4Stepper integrator;
 
     // 0. Vacuum Model (No Drag)
     // Pass 0.0 for drag coefficient, though no_drag_deriv ignores it anyway
-    Simulation sim_vacuum(0.0, integrator, v0, no_drag_deriv, g, h0);
+    auto sim_vacuum = make_simulation(0.0, integrator, v0, no_drag_deriv, g, h0);
     
     // For vacuum, we know optimal is 45 degrees, but let's calculate it to be consistent
     auto dist_func_vac = [&](double angle) {
@@ -56,7 +56,7 @@ int main() {
     std::cout << "  Max Distance:  " << std::fixed << std::setprecision(2) << max_dist_vac << " m\n\n";
 
     // 1. v^2 drag with constant Cd
-    Simulation sim_standard(k_over_m, integrator, v0, drag_deriv_v_squared, g, h0);
+    auto sim_standard = make_simulation(k_over_m, integrator, v0, drag_deriv_v_squared, g, h0);
 
     auto dist_func_std = [&](double angle) {
         return sim_standard.run(angle, deltaT).distance;
@@ -71,7 +71,7 @@ int main() {
 
 
     // 2. v^2 drag with variable Cd (Mach-dependent: transonic rise with supersonic fade)
-    Simulation sim_variable(k_over_m, integrator, v0, variable_drag_deriv, g, h0);
+    auto sim_variable = make_simulation(k_over_m, integrator, v0, variable_drag_deriv, g, h0);
 
     auto dist_func_var = [&](double angle) {
         return sim_variable.run(angle, deltaT).distance;
